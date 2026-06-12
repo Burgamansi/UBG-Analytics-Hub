@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-cyan: #29ABE2;
+  --brand-navy: #1a3a5c;
+  --brand-navy-dark: #0d2540;
+}
+
+@layer base {
+  * {
+    @apply border-slate-200;
+  }
+  body {
+    @apply bg-surface-secondary text-slate-800 font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-slate-900;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-slate-200 shadow-card;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover transition-shadow duration-200;
+  }
+  .btn-primary {
+    @apply bg-brand-cyan text-white font-semibold px-4 py-2 hover:bg-brand-navy-light transition-colors duration-200 text-sm;
+  }
+  .btn-secondary {
+    @apply bg-white text-brand-navy border border-slate-200 font-semibold px-4 py-2 hover:bg-slate-50 transition-colors duration-200 text-sm;
+  }
+  .kpi-card {
+    @apply card p-5 flex flex-col gap-1;
+  }
+  .section-title {
+    @apply text-xs font-bold text-slate-500 uppercase tracking-widest;
+  }
+  .page-title {
+    @apply text-2xl font-bold text-slate-900;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .badge-success {
+    @apply badge bg-emerald-50 text-emerald-700;
+  }
+  .badge-danger {
+    @apply badge bg-red-50 text-red-700;
+  }
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-700;
+  }
+  .badge-info {
+    @apply badge bg-sky-50 text-sky-700;
+  }
+  .table-header {
+    @apply bg-brand-navy text-white text-xs font-semibold uppercase tracking-wider;
+  }
+  .table-row-hover {
+    @apply hover:bg-slate-50 transition-colors duration-100;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
