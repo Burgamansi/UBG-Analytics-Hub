@@ -27,6 +27,8 @@ export const uploadStatusEnum = pgEnum("upload_status", [
 
 export const atestadoTipoEnum = pgEnum("atestado_tipo", ["integral", "parcial"]);
 
+export const tipoLancamentoEnum = pgEnum("tipo_lancamento", ["entrada", "saida", "outro"]);
+
 // ─── Uploads ──────────────────────────────────────────────────────────────────
 
 export const uploads = pgTable("uploads", {
@@ -101,5 +103,19 @@ export const atestados = pgTable("atestados", {
   cid: varchar("cid", { length: 300 }),
   dias: integer("dias").default(0),
   tipo: atestadoTipoEnum("tipo").default("integral"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Financeiro / DRE ─────────────────────────────────────────────────────────
+
+export const registros_financeiro = pgTable("registros_financeiro", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  mes: integer("mes").notNull(),
+  ano: integer("ano").notNull(),
+  categoria: varchar("categoria", { length: 100 }).notNull(),
+  tipo: tipoLancamentoEnum("tipo").default("outro"),
+  valor: numeric("valor", { precision: 15, scale: 2 }).notNull(),
+  descricao: varchar("descricao", { length: 255 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

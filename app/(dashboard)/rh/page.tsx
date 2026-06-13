@@ -247,7 +247,7 @@ export default function RHPage() {
                 Rafcorte: 47% dos desligamentos
               </div>
               <UBGDonutChart
-                data={desligPorEmpresa}
+                data={desligPorEmpresa.map((d) => ({ name: d.label, value: d.value }))}
                 formatValue={formatNumber}
                 height={240}
               />

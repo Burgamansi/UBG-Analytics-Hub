@@ -7,7 +7,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["xlsx"],
+    serverComponentsExternalPackages: ["xlsx", "officecrypto-tool", "cfb"],
   },
   images: {
     remotePatterns: [

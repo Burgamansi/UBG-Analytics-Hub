@@ -15,7 +15,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const navItems: Array<{
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  badge?: string;
+  badgeColor?: string;
+  disabled?: boolean;
+}> = [
   {
     label: "Visão Geral",
     href: "/dashboard",
@@ -39,9 +47,6 @@ const navItems = [
     label: "Financeiro",
     href: "/financeiro",
     icon: BarChart3,
-    badge: "Em breve",
-    badgeColor: "bg-slate-100 text-slate-500",
-    disabled: true,
   },
   {
     label: "Upload de Dados",
