@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:financeiro": "tsc --target es2020 --module commonjs --moduleResolution node --esModuleInterop --resolveJsonModule --skipLibCheck --outDir tmp/build scripts/test-financeiro.ts lib/parsers/parse-financeiro.ts && node tmp/build/scripts/test-financeiro.js"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.4.2",

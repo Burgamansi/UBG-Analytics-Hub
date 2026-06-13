@@ -41,6 +41,9 @@ next-env.d.ts
 # Drizzle
 drizzle/
 
+# Local test artifacts
+/tmp/
+
 # Editor
 .vscode/
 .idea/
