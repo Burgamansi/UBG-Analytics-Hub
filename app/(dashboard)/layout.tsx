@@ -24,20 +24,20 @@ const navItems = [
   },
   {
     label: "Comercial",
-    href: "/dashboard/comercial",
+    href: "/comercial",
     icon: TrendingUp,
     badge: "Jan–Mai",
   },
   {
     label: "RH",
-    href: "/dashboard/rh",
+    href: "/rh",
     icon: Users,
     badge: "Crítico",
     badgeColor: "bg-red-100 text-red-700",
   },
   {
     label: "Financeiro",
-    href: "/dashboard/financeiro",
+    href: "/financeiro",
     icon: BarChart3,
     badge: "Em breve",
     badgeColor: "bg-slate-100 text-slate-500",
@@ -45,7 +45,7 @@ const navItems = [
   },
   {
     label: "Upload de Dados",
-    href: "/dashboard/upload",
+    href: "/upload",
     icon: Upload,
   },
 ];
@@ -164,7 +164,7 @@ export default function DashboardLayout({
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </button>
             <Link
-              href="/dashboard/upload"
+              href="/upload"
               className="btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />

@@ -77,7 +77,7 @@ export default function DashboardPage() {
           </div>
           <div className="text-xs text-red-600 mt-0.5">
             45 desligamentos em Jan–Mar · Custo oculto estimado: R$ 135–225K ·{" "}
-            <Link href="/dashboard/rh" className="underline font-semibold">
+            <Link href="/rh" className="underline font-semibold">
               Ver módulo RH →
             </Link>
           </div>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <Link
-              href="/dashboard/comercial"
+              href="/comercial"
               className="text-xs text-brand-cyan font-semibold flex items-center gap-1 hover:underline"
             >
               Ver detalhes <ArrowRight className="w-3 h-3" />
@@ -225,7 +225,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <Link
-              href="/dashboard/rh"
+              href="/rh"
               className="text-xs text-red-500 font-semibold flex items-center gap-1 hover:underline"
             >
               Ver RH <ArrowRight className="w-3 h-3" />
