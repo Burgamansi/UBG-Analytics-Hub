@@ -144,6 +144,21 @@ export async function POST(request: NextRequest) {
       }
 
       const { rows, summary, errors } = parsed;
+
+      if (rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          arquivo: file.name,
+          tamanho_kb: Math.round(file.size / 1024),
+          modulo: "financeiro",
+          registros: 0,
+          erros: errors,
+          error:
+            errors[0] ||
+            "Nenhum registro foi importado. Verifique se a planilha possui as colunas de categoria (DRE) e valor.",
+        });
+      }
+
       result = {
         modulo: "financeiro",
         registros: rows.length,
