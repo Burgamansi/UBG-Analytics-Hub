@@ -125,6 +125,10 @@ function emptyEvolucao(mes: number, ano: number): EvolucaoMensal {
 }
 
 // ─── Parser principal: aba "DRE novo" ─────────────────────────────────────────
+// Estrutura real da planilha:
+//   Linha 1 (índice 0): ["Mês em numeral", 1, 2, 3, 4, ...12]
+//   Linha 2 (índice 1): ["Descrição", "Janeiro", "Fevereiro", ..."Dezembro", "Total", ...]
+//   Linha 3+ (índice 2+): dados — ["FATURAMENTO", val_jan, val_fev, ...]
 
 function parseDreNovo(
   ws: XLSX.WorkSheet,
@@ -136,14 +140,29 @@ function parseDreNovo(
     defval: null,
   });
 
-  // Linha 2 (índice 1) = cabeçalho: ["Descrição", "Janeiro", "Fevereiro", ...]
-  const headerRow = (matrix[1] ?? []) as unknown[];
+  // Linha 1 (índice 0): numerais dos meses (1-12)
+  // Linha 2 (índice 1): nomes dos meses
+  // Usar linha 1 para mapear coluna → mês (mais confiável)
+  const numeralRow = (matrix[0] ?? []) as unknown[];
+  const nameRow = (matrix[1] ?? []) as unknown[];
 
   // Mapear coluna → índice de mês (1-12)
   const colMes: Record<number, number> = {};
-  for (let c = 1; c < headerRow.length; c++) {
-    const mesIdx = MESES[norm(headerRow[c])];
-    if (mesIdx) colMes[c] = mesIdx;
+
+  // Primeiro tentar pela linha de numerais (linha 1)
+  for (let c = 1; c < numeralRow.length; c++) {
+    const v = numeralRow[c];
+    if (typeof v === "number" && v >= 1 && v <= 12) {
+      colMes[c] = v;
+    }
+  }
+
+  // Fallback: usar nomes dos meses (linha 2)
+  if (Object.keys(colMes).length === 0) {
+    for (let c = 1; c < nameRow.length; c++) {
+      const mesIdx = MESES[norm(nameRow[c])];
+      if (mesIdx) colMes[c] = mesIdx;
+    }
   }
 
   const evolucaoMap = new Map<number, EvolucaoMensal>();
