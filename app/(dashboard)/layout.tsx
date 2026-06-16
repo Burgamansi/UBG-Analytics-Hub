@@ -14,235 +14,248 @@ import {
   ChevronDown,
   HelpCircle,
   Settings,
+  Activity,
   Zap,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems: Array<{
-  label: string;
-  href: string;
-  icon: typeof LayoutDashboard;
-  exact?: boolean;
-  badge?: string;
-  badgeColor?: string;
-  disabled?: boolean;
-}> = [
+const navGroups = [
   {
-    label: "Visão Geral",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    exact: true,
+    label: "Dashboards",
+    items: [
+      { label: "Visão Geral",   href: "/dashboard",  icon: LayoutDashboard, exact: true },
+      { label: "Comercial",     href: "/comercial",  icon: TrendingUp,      badge: "Jan–Mai",  badgeType: "info" },
+      { label: "RH",            href: "/rh",         icon: Users,           badge: "Crítico",  badgeType: "danger" },
+      { label: "Financeiro",    href: "/financeiro", icon: BarChart3 },
+    ],
   },
   {
-    label: "Comercial",
-    href: "/comercial",
-    icon: TrendingUp,
-    badge: "Jan–Mai",
-  },
-  {
-    label: "RH",
-    href: "/rh",
-    icon: Users,
-    badge: "Crítico",
-    badgeColor: "bg-red-500/20 text-red-400",
-  },
-  {
-    label: "Financeiro",
-    href: "/financeiro",
-    icon: BarChart3,
-  },
-  {
-    label: "Upload de Dados",
-    href: "/upload",
-    icon: Upload,
+    label: "Plataforma",
+    items: [
+      { label: "Upload de Dados", href: "/upload", icon: Upload },
+    ],
   },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const BADGE_STYLES: Record<string, string> = {
+  info:    "bg-rjt-secondary/15 text-rjt-secondary border border-rjt-secondary/25",
+  danger:  "bg-status-danger/15 text-status-danger border border-status-danger/25",
+  success: "bg-status-success/15 text-status-success border border-status-success/25",
+  warning: "bg-status-warning/15 text-status-warning border border-status-warning/25",
+};
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--surface-bg)" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "var(--surface-app)" }}>
 
-      {/* ── Sidebar ──────────────────────────────── */}
+      {/* ════════════════════════════════════════
+          SIDEBAR — Enterprise Dark
+          ════════════════════════════════════════ */}
       <aside
-        className="w-[220px] flex flex-col flex-shrink-0 relative"
+        className="w-[216px] flex flex-col flex-shrink-0 relative z-20"
         style={{
-          background: "linear-gradient(180deg, #0D1B2E 0%, #0f2035 60%, #0D1B2E 100%)",
+          background: "linear-gradient(180deg, #080f1a 0%, #0a1520 50%, #080f1a 100%)",
           boxShadow: "var(--shadow-sidebar)",
+          borderRight: "1px solid rgba(27,152,224,0.1)",
         }}
       >
-        {/* Logo */}
-        <div className="px-5 pt-6 pb-5 border-b border-white/8">
+        {/* Logo Block */}
+        <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(27,152,224,0.08)" }}>
           <div className="flex flex-col items-center gap-2">
-            <div className="relative w-full flex items-center justify-center">
-              <Image
-                src="/logo-rjt-nexus.png"
-                alt="RJT NEXUS"
-                width={160}
-                height={54}
-                className="object-contain"
-                priority
-              />
-            </div>
-            <div className="w-full flex items-center justify-center gap-1.5 mt-1">
+            <Image
+              src="/logo-rjt-360.png"
+              alt="RJT NEXUS 360°"
+              width={168}
+              height={56}
+              className="object-contain"
+              priority
+              style={{ filter: "brightness(1.05)" }}
+            />
+            <div className="flex items-center gap-2 mt-0.5">
               <div className="status-dot-live" />
-              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 500, letterSpacing: "0.06em" }}>
-                ANALYTICS HUB
+              <span style={{
+                fontSize: 9,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 600,
+                color: "rgba(27,152,224,0.5)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+              }}>
+                Analytics Hub · 2026
               </span>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <div
-            className="px-3 mb-3"
-            style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}
-          >
-            Módulos
-          </div>
+        <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+          {navGroups.map((group) => (
+            <div key={group.label}>
+              <div className="section-title px-2 mb-1.5">{group.label}</div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href);
 
-          <div className="space-y-0.5">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.exact
-                ? pathname === item.href
-                : pathname.startsWith(item.href);
+                  return (
+                    <Link key={item.href} href={item.href} className={cn("nav-item", isActive && "active")}>
+                      {/* Icon */}
+                      <div
+                        className="w-7 h-7 rounded-icon flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{
+                          background: isActive
+                            ? "rgba(27,152,224,0.2)"
+                            : "rgba(255,255,255,0.04)",
+                          boxShadow: isActive ? "0 0 8px rgba(27,152,224,0.2)" : "none",
+                        }}
+                      >
+                        <Icon
+                          className="w-3.5 h-3.5"
+                          style={{ color: isActive ? "var(--rjt-secondary)" : "var(--text-muted)" }}
+                        />
+                      </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.disabled ? "#" : item.href}
-                  className={cn(
-                    "nav-item",
-                    isActive && "active",
-                    item.disabled && "opacity-40 cursor-not-allowed pointer-events-none"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 transition-all",
-                      isActive
-                        ? "bg-brand-cyan/20"
-                        : "bg-white/5 group-hover:bg-white/10"
-                    )}
-                  >
-                    <Icon className="w-3.5 h-3.5 nav-icon" />
-                  </div>
-                  <span className="flex-1 font-medium" style={{ fontSize: 13 }}>{item.label}</span>
-                  {item.badge && (
-                    <span
-                      className={cn(
-                        "text-2xs px-2 py-0.5 rounded-full font-semibold",
-                        item.badgeColor || "bg-brand-cyan/20 text-brand-cyan"
+                      <span className="flex-1" style={{ fontSize: 13 }}>{item.label}</span>
+
+                      {item.badge && (
+                        <span className={cn("badge text-2xs", BADGE_STYLES[item.badgeType || "info"])}>
+                          {item.badge}
+                        </span>
                       )}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Divider */}
-          <div className="my-4 border-t border-white/8" />
-
-          {/* Quick actions */}
-          <div
-            className="px-3 mb-2"
-            style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}
-          >
-            Sistema
-          </div>
-          <Link href="/upload" className="nav-item">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 flex-shrink-0">
-              <Zap className="w-3.5 h-3.5" />
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <span style={{ fontSize: 13 }}>Importar Dados</span>
-          </Link>
+          ))}
         </nav>
 
-        {/* Footer / User */}
-        <div className="px-4 py-4 border-t border-white/8">
-          <div className="flex items-center gap-2.5">
+        {/* Sidebar Footer */}
+        <div className="px-3 py-3" style={{ borderTop: "1px solid rgba(27,152,224,0.08)" }}>
+          {/* System health */}
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-btn mb-2"
+            style={{ background: "rgba(0,230,118,0.06)", border: "1px solid rgba(0,230,118,0.12)" }}
+          >
+            <Activity className="w-3.5 h-3.5" style={{ color: "var(--status-success)" }} />
+            <div className="flex-1">
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--status-success)", fontFamily: "'Space Grotesk', sans-serif" }}>
+                Sistema Online
+              </div>
+              <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Neon DB · Vercel</div>
+            </div>
+          </div>
+
+          {/* User */}
+          <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-btn cursor-pointer hover:bg-white/5 transition-colors">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, var(--brand-cyan), var(--brand-cyan-dark))" }}
+              style={{
+                background: "linear-gradient(135deg, var(--rjt-secondary), var(--rjt-accent))",
+                boxShadow: "0 0 10px rgba(27,152,224,0.3)",
+              }}
             >
-              <span style={{ color: "white", fontSize: 11, fontWeight: 700 }}>RM</span>
+              <span style={{ color: "white", fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>RM</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: 600 }} className="truncate">
+              <div style={{ color: "var(--text-primary)", fontSize: 12, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }} className="truncate">
                 Administrador
               </div>
-              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }} className="truncate">
-                União Bag · 2026
-              </div>
+              <div style={{ color: "var(--text-muted)", fontSize: 10 }} className="truncate">União Bag</div>
             </div>
-            <Settings className="w-4 h-4 flex-shrink-0 cursor-pointer" style={{ color: "rgba(255,255,255,0.3)" }} />
+            <Settings className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
           </div>
         </div>
       </aside>
 
-      {/* ── Main ─────────────────────────────────── */}
+      {/* ════════════════════════════════════════
+          MAIN CONTENT
+          ════════════════════════════════════════ */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Topbar */}
+        {/* ── Topbar ─────────────────────────────── */}
         <header
-          className="flex items-center justify-between px-6 py-3 flex-shrink-0"
+          className="flex items-center justify-between px-6 py-3 flex-shrink-0 z-10"
           style={{
-            background: "white",
-            borderBottom: "1px solid rgba(226,232,240,0.8)",
-            boxShadow: "0 1px 4px rgba(13,27,46,0.04)",
+            background: "rgba(10,21,32,0.95)",
+            borderBottom: "1px solid rgba(27,152,224,0.1)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 1px 0 rgba(27,152,224,0.06), 0 4px 24px rgba(0,0,0,0.2)",
           }}
         >
-          {/* Left: breadcrumb */}
-          <div className="flex flex-col">
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+          {/* Left — Breadcrumb */}
+          <div>
+            <div
+              style={{
+                fontSize: 10,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 600,
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+              }}
+            >
               União Bag — Big Bags e Sacarias
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.02em" }}>
+            <div className="page-title" style={{ fontSize: 16 }}>
               Indicadores Gerenciais 2026
             </div>
           </div>
 
-          {/* Right: actions */}
+          {/* Right — Actions */}
           <div className="flex items-center gap-2">
+
             {/* Search */}
             <button
-              className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
-              style={{ background: "#F8FAFC", border: "1px solid rgba(226,232,240,0.8)", color: "var(--text-muted)", fontSize: 13 }}
+              className="flex items-center gap-2 px-3 py-2 rounded-btn transition-all"
+              style={{
+                background: "rgba(27,152,224,0.06)",
+                border: "1px solid rgba(27,152,224,0.15)",
+                color: "var(--text-muted)",
+                fontSize: 12,
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
             >
               <Search className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Buscar...</span>
             </button>
 
-            {/* Status live */}
+            {/* Live status */}
             <div
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-btn"
+              style={{
+                background: "rgba(0,230,118,0.06)",
+                border: "1px solid rgba(0,230,118,0.15)",
+              }}
             >
               <div className="status-dot-live" />
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#059669" }}>Dados atualizados</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--status-success)", fontFamily: "'Space Grotesk', sans-serif" }}>
+                Dados atualizados
+              </span>
             </div>
 
             {/* Help */}
-            <button className="p-2 rounded-lg transition-colors hover:bg-slate-50" style={{ color: "var(--text-muted)" }}>
-              <HelpCircle className="w-4.5 h-4.5" />
+            <button
+              className="p-2 rounded-btn transition-all hover:bg-white/5"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <HelpCircle className="w-4 h-4" />
             </button>
 
             {/* Bell */}
-            <button className="relative p-2 rounded-lg transition-colors hover:bg-slate-50" style={{ color: "var(--text-muted)" }}>
-              <Bell className="w-4.5 h-4.5" />
+            <button
+              className="relative p-2 rounded-btn transition-all hover:bg-white/5"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <Bell className="w-4 h-4" />
               <span
                 className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                style={{ background: "var(--status-danger)", boxShadow: "0 0 0 2px white" }}
+                style={{ background: "var(--status-danger)", boxShadow: "0 0 6px var(--status-danger)" }}
               />
             </button>
 
@@ -252,24 +265,32 @@ export default function DashboardLayout({
               <span>Upload Planilha</span>
             </Link>
 
-            {/* User avatar */}
-            <div className="flex items-center gap-2 pl-2 ml-1 border-l border-slate-200 cursor-pointer">
+            {/* Avatar */}
+            <div
+              className="flex items-center gap-2 pl-3 ml-1 cursor-pointer"
+              style={{ borderLeft: "1px solid rgba(27,152,224,0.15)" }}
+            >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, var(--brand-cyan), var(--brand-cyan-dark))" }}
+                style={{
+                  background: "linear-gradient(135deg, var(--rjt-secondary), var(--rjt-accent))",
+                  boxShadow: "0 0 10px rgba(27,152,224,0.3)",
+                }}
               >
-                <span style={{ color: "white", fontSize: 11, fontWeight: 700 }}>RM</span>
+                <span style={{ color: "white", fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>RM</span>
               </div>
               <div className="hidden md:flex flex-col">
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>Rogério M.</span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Administrador</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
+                  Rogério M.
+                </span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Administrador</span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 hidden md:block" style={{ color: "var(--text-muted)" }} />
             </div>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* ── Page Content ───────────────────────── */}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

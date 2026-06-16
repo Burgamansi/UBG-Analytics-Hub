@@ -10,12 +10,18 @@ import {
 } from "recharts";
 
 const COLORS = [
-  "#29ABE2", "#1a3a5c", "#10B981", "#F59E0B",
-  "#EF4444", "#8B5CF6", "#EC4899", "#6366F1",
+  "#1b98e0",
+  "#00e5ff",
+  "#00e676",
+  "#ffb300",
+  "#ff4d6d",
+  "#b388ff",
+  "#ff80ab",
+  "#69f0ae",
 ];
 
 interface DonutChartProps {
-  data: Array<{ name: string; value: number }>;
+  data: Array<{ name: string; value: number; color?: string }>;
   height?: number;
   innerRadius?: number;
   outerRadius?: number;
@@ -31,20 +37,57 @@ const CustomTooltip = ({
   formatValue,
 }: {
   active?: boolean;
-  payload?: Array<{ name: string; value: number; payload: { percent: number } }>;
+  payload?: Array<{ name: string; value: number; payload: { percent: number; color?: string } }>;
   formatValue: (v: number) => string;
 }) => {
   if (!active || !payload?.length) return null;
   const item = payload[0];
+  const color = item.payload.color || "#1b98e0";
   return (
-    <div className="bg-white border border-slate-200 shadow-lg p-3 text-sm">
-      <div className="font-semibold text-slate-800 mb-1">{item.name}</div>
-      <div className="text-slate-600">
-        Valor: <span className="font-bold text-slate-900">{formatValue(item.value)}</span>
-      </div>
-      <div className="text-slate-500 text-xs mt-0.5">
+    <div
+      style={{
+        background: "rgba(8,18,28,0.96)",
+        border: `1px solid ${color}40`,
+        borderRadius: 10,
+        padding: "10px 14px",
+        backdropFilter: "blur(20px)",
+        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 16px ${color}15`,
+        minWidth: 150,
+      }}
+    >
+      <p
+        style={{
+          color: "#8fa3bc",
+          fontSize: 11,
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 600,
+          margin: "0 0 6px 0",
+        }}
+      >
+        {item.name}
+      </p>
+      <p
+        style={{
+          color: "#e0ecf8",
+          fontSize: 15,
+          fontFamily: "'Rajdhani', sans-serif",
+          fontWeight: 700,
+          margin: "0 0 2px 0",
+        }}
+      >
+        {formatValue(item.value)}
+      </p>
+      <p
+        style={{
+          color: color,
+          fontSize: 12,
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 600,
+          margin: 0,
+        }}
+      >
         {(item.payload.percent * 100).toFixed(1)}% do total
-      </div>
+      </p>
     </div>
   );
 };
@@ -56,15 +99,45 @@ const CustomLegend = ({
 }) => {
   if (!payload) return null;
   return (
-    <div className="flex flex-col gap-1.5 mt-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
       {payload.map((entry, i) => (
-        <div key={i} className="flex items-center gap-2 text-xs">
+        <div
+          key={i}
+          style={{ display: "flex", alignItems: "center", gap: 8 }}
+        >
           <div
-            className="w-2.5 h-2.5 flex-shrink-0"
-            style={{ background: entry.color }}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: entry.color,
+              boxShadow: `0 0 6px ${entry.color}`,
+              flexShrink: 0,
+            }}
           />
-          <span className="text-slate-600 flex-1 truncate">{entry.value}</span>
-          <span className="font-semibold text-slate-800">
+          <span
+            style={{
+              color: "#8fa3bc",
+              fontSize: 11,
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 500,
+              flex: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {entry.value}
+          </span>
+          <span
+            style={{
+              color: "#c8d8e8",
+              fontSize: 12,
+              fontFamily: "'Rajdhani', sans-serif",
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
             {(entry.payload.percent * 100).toFixed(1)}%
           </span>
         </div>
@@ -87,20 +160,41 @@ export function UBGDonutChart({
     <div>
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
+          <defs>
+            {data.map((entry, i) => {
+              const c = entry.color || COLORS[i % COLORS.length];
+              return (
+                <filter key={`glow-pie-${i}`} id={`glow-pie-${i}`}>
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              );
+            })}
+          </defs>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
             innerRadius={innerRadius}
             outerRadius={outerRadius}
-            paddingAngle={2}
+            paddingAngle={3}
             dataKey="value"
             strokeWidth={2}
-            stroke="#fff"
+            stroke="rgba(8,18,28,0.8)"
           >
-            {data.map((_, index) => (
-              <Cell key={index} fill={COLORS[index % COLORS.length]} />
-            ))}
+            {data.map((entry, index) => {
+              const color = entry.color || COLORS[index % COLORS.length];
+              return (
+                <Cell
+                  key={index}
+                  fill={color}
+                  style={{ filter: `drop-shadow(0 0 6px ${color}50)` }}
+                />
+              );
+            })}
           </Pie>
           <Tooltip content={<CustomTooltip formatValue={formatValue} />} />
           {showLegend && (
@@ -114,12 +208,29 @@ export function UBGDonutChart({
         </PieChart>
       </ResponsiveContainer>
       {(centerLabel || centerValue) && (
-        <div className="text-center -mt-2">
+        <div style={{ textAlign: "center", marginTop: -8 }}>
           {centerValue && (
-            <div className="text-lg font-black text-slate-900">{centerValue}</div>
+            <div
+              style={{
+                fontSize: 18,
+                fontFamily: "'Rajdhani', sans-serif",
+                fontWeight: 700,
+                color: "#e0ecf8",
+              }}
+            >
+              {centerValue}
+            </div>
           )}
           {centerLabel && (
-            <div className="text-xs text-slate-500">{centerLabel}</div>
+            <div
+              style={{
+                fontSize: 11,
+                fontFamily: "'Space Grotesk', sans-serif",
+                color: "#5a7a99",
+              }}
+            >
+              {centerLabel}
+            </div>
           )}
         </div>
       )}

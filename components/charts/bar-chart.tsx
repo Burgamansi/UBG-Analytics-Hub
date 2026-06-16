@@ -37,13 +37,53 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-slate-200 shadow-lg p-3 text-sm">
-      <div className="font-semibold text-slate-800 mb-1">{label}</div>
+    <div
+      style={{
+        background: "rgba(8,18,28,0.96)",
+        border: "1px solid rgba(27,152,224,0.35)",
+        borderRadius: 10,
+        padding: "10px 14px",
+        backdropFilter: "blur(20px)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(27,152,224,0.12)",
+        minWidth: 140,
+      }}
+    >
+      <p
+        style={{
+          color: "#5a7a99",
+          fontSize: 11,
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.07em",
+          marginBottom: 6,
+          margin: "0 0 6px 0",
+        }}
+      >
+        {label}
+      </p>
       {payload.map((p, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />
-          <span className="text-slate-600">{p.name}:</span>
-          <span className="font-bold text-slate-900">{formatValue(p.value)}</span>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: p.color,
+              boxShadow: `0 0 6px ${p.color}`,
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              color: "#c8d8e8",
+              fontSize: 13,
+              fontFamily: "'Rajdhani', sans-serif",
+              fontWeight: 700,
+            }}
+          >
+            {formatValue(p.value)}
+          </span>
         </div>
       ))}
     </div>
@@ -53,49 +93,90 @@ const CustomTooltip = ({
 export function UBGBarChart({
   data,
   height = 260,
-  color = "#29ABE2",
+  color = "#1b98e0",
   formatValue = formatMillions,
-  showLabels = true,
+  showLabels = false,
   highlightIndex,
 }: BarChartProps) {
+  const gradId = `bar-grad-${color.replace("#", "")}`;
+  const negGradId = "bar-grad-neg";
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 20, right: 16, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+      <BarChart data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.95} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.45} />
+          </linearGradient>
+          <linearGradient id={negGradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ff4d6d" stopOpacity={0.9} />
+            <stop offset="100%" stopColor="#ff4d6d" stopOpacity={0.4} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="rgba(27,152,224,0.07)"
+          vertical={false}
+        />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 12, fill: "#64748B", fontWeight: 600 }}
+          tick={{
+            fontSize: 11,
+            fill: "#4d6680",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 500,
+          }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={formatValue}
-          tick={{ fontSize: 11, fill: "#94A3B8" }}
+          tick={{
+            fontSize: 10,
+            fill: "#3d5570",
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
           axisLine={false}
           tickLine={false}
-          width={70}
+          width={68}
         />
         <Tooltip
           content={<CustomTooltip formatValue={formatValue} />}
-          cursor={{ fill: "#F1F5F9" }}
+          cursor={{ fill: "rgba(27,152,224,0.05)" }}
         />
-        <Bar dataKey="value" name="Valor" radius={[2, 2, 0, 0]} maxBarSize={56}>
-          {data.map((_, index) => (
-            <Cell
-              key={index}
-              fill={
-                highlightIndex !== undefined && index === highlightIndex
-                  ? "#1a3a5c"
-                  : color
-              }
-            />
-          ))}
+        <Bar dataKey="value" name="Valor" radius={[6, 6, 0, 0]} maxBarSize={52}>
+          {data.map((entry, index) => {
+            const isNeg = entry.value < 0;
+            const isHighlight =
+              highlightIndex !== undefined && index === highlightIndex;
+            return (
+              <Cell
+                key={index}
+                fill={
+                  isHighlight
+                    ? `url(#bar-grad-13233d)`
+                    : isNeg
+                    ? `url(#${negGradId})`
+                    : `url(#${gradId})`
+                }
+                style={{
+                  filter: `drop-shadow(0 0 5px ${isNeg ? "#ff4d6d" : color}35)`,
+                }}
+              />
+            );
+          })}
           {showLabels && (
             <LabelList
               dataKey="value"
               position="top"
               formatter={formatValue}
-              style={{ fontSize: 11, fontWeight: 700, fill: "#334155" }}
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                fill: "#5a7a99",
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
             />
           )}
         </Bar>
@@ -107,10 +188,12 @@ export function UBGBarChart({
 export function UBGHorizontalBar({
   data,
   height,
-  color = "#29ABE2",
+  color = "#1b98e0",
   formatValue = formatNumber,
 }: BarChartProps) {
   const h = height || Math.max(200, data.length * 42);
+  const gradId = `hbar-grad-${color.replace("#", "")}`;
+
   return (
     <ResponsiveContainer width="100%" height={h}>
       <BarChart
@@ -118,32 +201,63 @@ export function UBGHorizontalBar({
         data={data}
         margin={{ top: 0, right: 80, left: 0, bottom: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.5} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="rgba(27,152,224,0.07)"
+          horizontal={false}
+        />
         <XAxis
           type="number"
           tickFormatter={formatValue}
-          tick={{ fontSize: 11, fill: "#94A3B8" }}
+          tick={{
+            fontSize: 10,
+            fill: "#3d5570",
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           type="category"
           dataKey="label"
-          tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }}
+          tick={{
+            fontSize: 11,
+            fill: "#8fa3bc",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 500,
+          }}
           axisLine={false}
           tickLine={false}
           width={110}
         />
         <Tooltip
           content={<CustomTooltip formatValue={formatValue} />}
-          cursor={{ fill: "#F1F5F9" }}
+          cursor={{ fill: "rgba(27,152,224,0.05)" }}
         />
-        <Bar dataKey="value" name="Valor" fill={color} radius={[0, 2, 2, 0]} maxBarSize={24}>
+        <Bar
+          dataKey="value"
+          name="Valor"
+          fill={`url(#${gradId})`}
+          radius={[0, 4, 4, 0]}
+          maxBarSize={20}
+          style={{ filter: `drop-shadow(0 0 4px ${color}30)` }}
+        >
           <LabelList
             dataKey="value"
             position="right"
             formatter={formatValue}
-            style={{ fontSize: 11, fontWeight: 700, fill: "#334155" }}
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              fill: "#8fa3bc",
+              fontFamily: "'Rajdhani', sans-serif",
+            }}
           />
         </Bar>
       </BarChart>
