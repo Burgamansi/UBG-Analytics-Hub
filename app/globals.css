@@ -1,73 +1,244 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* ── Brand Colors ─────────────────────────────── */
   --brand-cyan: #29ABE2;
-  --brand-navy: #1a3a5c;
-  --brand-navy-dark: #0d2540;
+  --brand-cyan-light: #4FC3F7;
+  --brand-cyan-dark: #0288D1;
+  --brand-navy: #0D1B2E;
+  --brand-navy-mid: #1A3A5C;
+  --brand-navy-light: #1e5a8a;
+
+  /* ── Surfaces ─────────────────────────────────── */
+  --surface-bg: #F0F4F8;
+  --surface-card: #FFFFFF;
+  --surface-sidebar: #0D1B2E;
+
+  /* ── Text ─────────────────────────────────────── */
+  --text-primary: #0D1B2E;
+  --text-secondary: #4A5568;
+  --text-muted: #94A3B8;
+
+  /* ── Status ───────────────────────────────────── */
+  --status-success: #10B981;
+  --status-danger: #EF4444;
+  --status-warning: #F59E0B;
+  --status-info: #3B82F6;
+
+  /* ── Shadows ──────────────────────────────────── */
+  --shadow-card: 0 1px 4px rgba(13,27,46,0.06), 0 4px 16px rgba(13,27,46,0.04);
+  --shadow-card-hover: 0 8px 32px rgba(13,27,46,0.12);
+  --shadow-sidebar: 4px 0 24px rgba(13,27,46,0.15);
 }
 
 @layer base {
   * {
     @apply border-slate-200;
+    box-sizing: border-box;
+  }
+  html {
+    font-feature-settings: "cv02","cv03","cv04","cv11";
   }
   body {
-    @apply bg-surface-secondary text-slate-800 font-sans antialiased;
+    background-color: var(--surface-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-slate-900;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
+
+  /* ── Cards ────────────────────────────────────── */
   .card {
-    @apply bg-white border border-slate-200 shadow-card;
+    background: var(--surface-card);
+    border: 1px solid rgba(226,232,240,0.8);
+    box-shadow: var(--shadow-card);
+    border-radius: 12px;
   }
   .card-hover {
-    @apply hover:shadow-card-hover transition-shadow duration-200;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
+  .card-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+
+  /* ── KPI Card Premium ─────────────────────────── */
+  .kpi-card {
+    background: var(--surface-card);
+    border: 1px solid rgba(226,232,240,0.8);
+    box-shadow: var(--shadow-card);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .kpi-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-cyan), var(--brand-cyan-light));
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* ── Buttons ──────────────────────────────────── */
   .btn-primary {
-    @apply bg-brand-cyan text-white font-semibold px-4 py-2 hover:bg-brand-navy-light transition-colors duration-200 text-sm;
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-cyan-dark));
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(41,171,226,0.3);
+    letter-spacing: -0.01em;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--brand-cyan-dark), var(--brand-navy-mid));
+    box-shadow: 0 4px 16px rgba(41,171,226,0.4);
+    transform: translateY(-1px);
   }
   .btn-secondary {
-    @apply bg-white text-brand-navy border border-slate-200 font-semibold px-4 py-2 hover:bg-slate-50 transition-colors duration-200 text-sm;
+    background: white;
+    color: var(--brand-navy);
+    border: 1px solid rgba(226,232,240,0.8);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
   }
-  .kpi-card {
-    @apply card p-5 flex flex-col gap-1;
+  .btn-secondary:hover {
+    background: #F8FAFC;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
+
+  /* ── Section Title ────────────────────────────── */
   .section-title {
-    @apply text-xs font-bold text-slate-500 uppercase tracking-widest;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
   .page-title {
-    @apply text-2xl font-bold text-slate-900;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
   }
+
+  /* ── Badges ───────────────────────────────────── */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    letter-spacing: 0.01em;
   }
-  .badge-success {
-    @apply badge bg-emerald-50 text-emerald-700;
-  }
-  .badge-danger {
-    @apply badge bg-red-50 text-red-700;
-  }
-  .badge-warning {
-    @apply badge bg-amber-50 text-amber-700;
-  }
-  .badge-info {
-    @apply badge bg-sky-50 text-sky-700;
-  }
+  .badge-success { @apply badge bg-emerald-50 text-emerald-700; }
+  .badge-danger  { @apply badge bg-red-50 text-red-700; }
+  .badge-warning { @apply badge bg-amber-50 text-amber-700; }
+  .badge-info    { @apply badge bg-sky-50 text-sky-700; }
+
+  /* ── Table ────────────────────────────────────── */
   .table-header {
-    @apply bg-brand-navy text-white text-xs font-semibold uppercase tracking-wider;
+    background: var(--brand-navy);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
   .table-row-hover {
-    @apply hover:bg-slate-50 transition-colors duration-100;
+    transition: background-color 0.1s ease;
+  }
+  .table-row-hover:hover {
+    background-color: #F8FAFC;
+  }
+
+  /* ── Nav Item Sidebar ─────────────────────────── */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.65);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.95);
+  }
+  .nav-item.active {
+    background: rgba(41,171,226,0.18);
+    color: var(--brand-cyan);
+    font-weight: 600;
+  }
+  .nav-item.active .nav-icon {
+    color: var(--brand-cyan);
+  }
+
+  /* ── Status Dot ───────────────────────────────── */
+  .status-dot-live {
+    width: 8px; height: 8px;
+    background: var(--status-success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+    50% { box-shadow: 0 0 0 6px rgba(16,185,129,0.08); }
+  }
+
+  /* ── Glassmorphism accent ─────────────────────── */
+  .glass-accent {
+    background: linear-gradient(135deg, rgba(41,171,226,0.12), rgba(41,171,226,0.04));
+    border: 1px solid rgba(41,171,226,0.2);
+    border-radius: 10px;
   }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #F1F5F9; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }

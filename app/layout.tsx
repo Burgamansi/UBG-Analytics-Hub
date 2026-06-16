@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "UBG Analytics Hub — União Bag",
-  description: "Sistema de indicadores gerenciais — Comercial, RH e Financeiro",
+  description: "Cockpit executivo de indicadores gerenciais — Comercial, RH e Financeiro",
   icons: { icon: "/favicon.ico" },
 };
 
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
