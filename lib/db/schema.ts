@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   pgEnum,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -117,5 +118,43 @@ export const registros_financeiro = pgTable("registros_financeiro", {
   tipo: tipoLancamentoEnum("tipo").default("outro"),
   valor: numeric("valor", { precision: 15, scale: 2 }).notNull(),
   descricao: varchar("descricao", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Financeiro DRE Mensal (dados consolidados da aba "DRE novo") ─────────────
+
+export const financeiro_dre_mensal = pgTable("financeiro_dre_mensal", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  mes: integer("mes").notNull(),
+  ano: integer("ano").notNull(),
+  faturamento: numeric("faturamento", { precision: 15, scale: 2 }).default("0"),
+  despesas_vendas: numeric("despesas_vendas", { precision: 15, scale: 2 }).default("0"),
+  tributos_vendas: numeric("tributos_vendas", { precision: 15, scale: 2 }).default("0"),
+  receita_liquida: numeric("receita_liquida", { precision: 15, scale: 2 }).default("0"),
+  cmv: numeric("cmv", { precision: 15, scale: 2 }).default("0"),
+  adm: numeric("adm", { precision: 15, scale: 2 }).default("0"),
+  tributos: numeric("tributos", { precision: 15, scale: 2 }).default("0"),
+  ebitda: numeric("ebitda", { precision: 15, scale: 2 }).default("0"),
+  resultado_financeiro: numeric("resultado_financeiro", { precision: 15, scale: 2 }).default("0"),
+  aplicacoes: numeric("aplicacoes", { precision: 15, scale: 2 }).default("0"),
+  emprestimos: numeric("emprestimos", { precision: 15, scale: 2 }).default("0"),
+  resultado_liquido: numeric("resultado_liquido", { precision: 15, scale: 2 }).default("0"),
+  retirada_socios: numeric("retirada_socios", { precision: 15, scale: 2 }).default("0"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Financeiro Plano de Contas ────────────────────────────────────────────────
+
+export const financeiro_plano_contas = pgTable("financeiro_plano_contas", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  ano: integer("ano").notNull(),
+  codigo: integer("codigo").notNull(),
+  descricao: varchar("descricao", { length: 200 }).notNull(),
+  tipo: varchar("tipo", { length: 100 }),
+  orcado: numeric("orcado", { precision: 15, scale: 2 }).default("0"),
+  realizado: numeric("realizado", { precision: 15, scale: 2 }).default("0"),
+  diferenca: numeric("diferenca", { precision: 15, scale: 2 }).default("0"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

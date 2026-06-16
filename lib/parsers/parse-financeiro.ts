@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
-import * as officeCrypto from "officecrypto-tool";
+
+// ─── Tipos públicos ────────────────────────────────────────────────────────────
 
 export interface ParsedFinanceiroRow {
   mes: number;
@@ -17,181 +18,307 @@ export interface EvolucaoMensal {
   custos: number;
   despesas: number;
   resultado: number;
+  ebitda: number;
+  receita_liquida: number;
+  tributos_vendas: number;
+  despesas_vendas: number;
+  resultado_financeiro: number;
+  aplicacoes: number;
+  emprestimos: number;
+}
+
+export interface CustoRH {
+  unidade: string;
+  valor: number;
 }
 
 export interface FinanceiroSummary {
+  // KPIs principais
   receita_total: number;
+  receita_liquida: number;
   custos: number;
   despesas: number;
   lucro_bruto: number;
   resultado_liquido: number;
+  ebitda: number;
   margem_pct: number;
+  margem_ebitda_pct: number;
+  // Detalhamento
+  tributos_vendas: number;
+  despesas_vendas: number;
+  resultado_financeiro: number;
+  aplicacoes: number;
+  emprestimos: number;
+  retirada_socios: number;
+  // Evolução mensal
   evolucao_mensal: EvolucaoMensal[];
+  // Custo RH
+  custo_rh: CustoRH[];
+  // Plano de contas
+  plano_contas: PlanoContaItem[];
+  // Metadados
+  meses_com_dados: number;
+  ano_referencia: number;
 }
 
-const RECEITA_KEYS = ["faturamento", "receita"];
-const CUSTO_KEYS = ["cmv", "custo produto", "custo do produto"];
-const EXCLUDE_KEYS = ["nao usar"];
+export interface PlanoContaItem {
+  codigo: number;
+  descricao: string;
+  tipo: string;
+  orcado: number;
+  realizado: number;
+  diferenca: number;
+}
 
-// Cabeçalhos aceitos (normalizados: sem acento, minúsculo) para identificar
-// a coluna de categoria/classificação DRE.
-const CATEGORIA_HEADER_KEYS = [
-  "dre",
-  "categoria",
-  "classificacao",
-  "classific",
-  "conta",
-  "grupo",
-];
+// ─── Constantes ───────────────────────────────────────────────────────────────
 
-// Cabeçalhos aceitos para identificar a coluna de valor.
-const VALOR_HEADER_KEYS = [
-  "valor real",
-  "valor pago",
-  "valor liquidado",
-  "valor",
-  "total",
-  "receita",
-  "despesa",
-];
-
-// Cabeçalhos aceitos para colunas de data/mês/ano.
-const DATA_HEADER_KEYS = [
-  "mes/ano",
-  "mes lanc",
-  "data lancamento",
-  "data real",
-  "data vencimento",
-  "data competencia",
-  "competencia",
-  "data",
-  "mes",
-  "ano",
-];
-
-const MESES_MAP: Record<string, number> = {
+const MESES: Record<string, number> = {
+  janeiro: 1, fevereiro: 2, março: 3, marco: 3, abril: 4,
+  maio: 5, junho: 6, julho: 7, agosto: 8, setembro: 9,
+  outubro: 10, novembro: 11, dezembro: 12,
   jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
   jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
 };
 
-const DIACRITICS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
-const MOJIBAKE_REGEX = new RegExp("[\\u00c3\\u00c2][\\u0080-\\u00bf]");
+const DRE_NOVO_ROWS: Record<string, keyof EvolucaoMensal | "skip"> = {
+  "faturamento": "receita",
+  "despesas vendas": "despesas_vendas",
+  "tributos vendas": "tributos_vendas",
+  "receita liquida": "receita_liquida",
+  "cmv": "custos",
+  "adm": "despesas",
+  "tributos": "skip", // tributos operacionais — incluídos em despesas
+  "resultado operacional (ebitda)": "ebitda",
+  "resultado financeiro": "resultado_financeiro",
+  "aplicacoes": "aplicacoes",
+  "aplicações": "aplicacoes",
+  "emprestimos": "emprestimos",
+  "empréstimos": "emprestimos",
+  "resultado liquido": "resultado",
+};
 
-// Quantas linhas iniciais de cada aba são inspecionadas para localizar o
-// cabeçalho real (que pode não estar na primeira linha).
-const MAX_HEADER_SCAN_ROWS = 20;
-
-/**
- * Repairs UTF-8 text that was mistakenly decoded as Latin-1 (common in
- * CSV exports), e.g. "MÃªs" -> "Mês", "NÃ£o Usar" -> "Não Usar".
- */
-function fixMojibake(s: string): string {
-  if (!MOJIBAKE_REGEX.test(s)) return s;
-  try {
-    const fixed = Buffer.from(s, "latin1").toString("utf8");
-    if (!fixed.includes("�")) return fixed;
-  } catch {
-    // fall through
-  }
-  return s;
-}
-
-function cleanStr(val: unknown): string {
-  return fixMojibake(String(val ?? ""));
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function stripAccents(s: string): string {
-  return s.normalize("NFD").replace(DIACRITICS_REGEX, "");
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function normalizeHeader(h: unknown): string {
-  return stripAccents(fixMojibake(String(h ?? ""))).toLowerCase().trim();
+function norm(v: unknown): string {
+  return stripAccents(String(v ?? "").trim()).toLowerCase();
 }
 
-function toNumber(val: unknown): number {
-  if (val === null || val === undefined || val === "") return 0;
-  if (typeof val === "number") return val;
-  let str = String(val).trim();
-  str = str.replace(/r\$\s?/gi, "").trim();
-  if (!str) return 0;
-  if (/,\d{1,2}$/.test(str)) {
-    str = str.replace(/\./g, "").replace(",", ".");
-  } else {
-    str = str.replace(/,/g, "");
-  }
-  const n = parseFloat(str);
+function toNum(v: unknown): number {
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number") return isNaN(v) ? 0 : v;
+  const s = String(v).replace(/r\$\s?/gi, "").replace(/\./g, "").replace(",", ".").trim();
+  const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
 
-function detectMes(raw: unknown): number {
-  const lower = stripAccents(cleanStr(raw)).toLowerCase().trim();
-  for (const [key, val] of Object.entries(MESES_MAP)) {
-    if (lower.includes(key)) return val;
-  }
-  if (/^\d{1,2}$/.test(lower)) {
-    const n = parseInt(lower, 10);
-    if (n >= 1 && n <= 12) return n;
-  }
-  // "mm/yyyy" ou "mm/yy" (coluna "Mês/Ano")
-  const mmYyyy = lower.match(/^(\d{1,2})\/(\d{2,4})$/);
-  if (mmYyyy) {
-    const month = parseInt(mmYyyy[1], 10);
-    if (month >= 1 && month <= 12) return month;
-  }
-  // "dd/mm/yyyy"
-  const m = lower.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (m) {
-    const month = parseInt(m[2], 10);
-    if (month >= 1 && month <= 12) return month;
-  }
-  return 0;
+function emptyEvolucao(mes: number, ano: number): EvolucaoMensal {
+  return {
+    mes, ano,
+    receita: 0, receita_liquida: 0, custos: 0, despesas: 0,
+    resultado: 0, ebitda: 0, tributos_vendas: 0, despesas_vendas: 0,
+    resultado_financeiro: 0, aplicacoes: 0, emprestimos: 0,
+  };
 }
 
-function detectAno(raw: unknown): number {
-  const str = cleanStr(raw).trim();
-  const m4 = str.match(/(20\d{2})/);
-  if (m4) return parseInt(m4[1], 10);
-  // "mm/yy" (coluna "Mês/Ano")
-  const mmYy = str.match(/^\d{1,2}\/(\d{2})$/);
-  if (mmYy) return 2000 + parseInt(mmYy[1], 10);
-  const n = parseInt(str, 10);
-  if (!isNaN(n) && n > 2000) return n;
-  const m = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if (m) {
-    let y = parseInt(m[3], 10);
-    if (y < 100) y += 2000;
-    return y;
+// ─── Parser principal: aba "DRE novo" ─────────────────────────────────────────
+
+function parseDreNovo(
+  ws: XLSX.WorkSheet,
+  ano: number
+): { evolucao: EvolucaoMensal[]; retirada_socios: number } {
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    header: 1,
+    raw: true,
+    defval: null,
+  });
+
+  // Linha 2 (índice 1) = cabeçalho: ["Descrição", "Janeiro", "Fevereiro", ...]
+  const headerRow = (matrix[1] ?? []) as unknown[];
+
+  // Mapear coluna → índice de mês (1-12)
+  const colMes: Record<number, number> = {};
+  for (let c = 1; c < headerRow.length; c++) {
+    const mesIdx = MESES[norm(headerRow[c])];
+    if (mesIdx) colMes[c] = mesIdx;
   }
-  return 0;
+
+  const evolucaoMap = new Map<number, EvolucaoMensal>();
+  for (const mes of Object.values(colMes)) {
+    if (!evolucaoMap.has(mes)) evolucaoMap.set(mes, emptyEvolucao(mes, ano));
+  }
+
+  let retirada_socios = 0;
+
+  // Linhas de dados a partir da linha 3 (índice 2)
+  for (let r = 2; r < matrix.length; r++) {
+    const row = (matrix[r] ?? []) as unknown[];
+    const descNorm = norm(row[0]);
+    if (!descNorm) continue;
+
+    // Retirada de sócios
+    if (descNorm.includes("retirada") && descNorm.includes("socios")) {
+      for (const [c, mes] of Object.entries(colMes)) {
+        retirada_socios += toNum(row[Number(c)]);
+      }
+      continue;
+    }
+
+    // Encontrar mapeamento
+    let fieldKey: keyof EvolucaoMensal | "skip" | null = null;
+    for (const [key, field] of Object.entries(DRE_NOVO_ROWS)) {
+      if (descNorm.includes(key)) {
+        fieldKey = field;
+        break;
+      }
+    }
+    if (!fieldKey || fieldKey === "skip") continue;
+
+    for (const [cStr, mes] of Object.entries(colMes)) {
+      const c = Number(cStr);
+      const val = toNum(row[c]);
+      const ev = evolucaoMap.get(mes)!;
+      (ev[fieldKey] as number) += val;
+    }
+  }
+
+  const evolucao = Array.from(evolucaoMap.values())
+    .sort((a, b) => a.mes - b.mes);
+
+  return { evolucao, retirada_socios };
 }
 
-/**
- * Decrypts an Office file (xls/xlsx) if it is password-protected.
- * Returns the buffer unchanged if it is not an encrypted CFB container.
- * Throws "SENHA_INVALIDA" if the password does not match.
- */
-export async function decryptWorkbookBuffer(
-  buffer: Buffer,
-  password = "DRE2025"
-): Promise<Buffer> {
-  let encrypted = false;
-  try {
-    encrypted = officeCrypto.isEncrypted(buffer);
-  } catch {
-    // Not a CFB container (plain xlsx/csv) -> not encrypted
-    encrypted = false;
+// ─── Parser: aba "Plano de contas" ────────────────────────────────────────────
+
+function parsePlanoContas(ws: XLSX.WorkSheet): PlanoContaItem[] {
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    header: 1,
+    raw: true,
+    defval: null,
+  });
+
+  const items: PlanoContaItem[] = [];
+
+  // Cabeçalho na linha 2 (índice 1): Código | Descrição | Tipo | Orçado | Realizado | Diferença
+  for (let r = 2; r < matrix.length; r++) {
+    const row = (matrix[r] ?? []) as unknown[];
+    const codigo = toNum(row[0]);
+    const descricao = String(row[1] ?? "").trim();
+    const tipo = String(row[2] ?? "").trim();
+    const orcado = toNum(row[3]);
+    const realizado = toNum(row[4]);
+    const diferenca = toNum(row[5]);
+
+    if (!codigo || !descricao) continue;
+    // Apenas contas folha (código com 4 dígitos)
+    if (codigo < 1000 || codigo > 9999) continue;
+
+    items.push({ codigo, descricao, tipo, orcado, realizado, diferenca });
   }
 
-  if (!encrypted) return buffer;
-
-  try {
-    return await officeCrypto.decrypt(buffer, { password });
-  } catch (err) {
-    throw new Error(`SENHA_INVALIDA: ${String(err)}`);
-  }
+  return items;
 }
 
-export function buildFinanceiroSummary(rows: ParsedFinanceiroRow[]): FinanceiroSummary {
+// ─── Parser: aba "Custo Orçamento" ────────────────────────────────────────────
+
+function parseCustoOrcamento(ws: XLSX.WorkSheet): CustoRH[] {
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    header: 1,
+    raw: true,
+    defval: null,
+  });
+
+  const rhItems: CustoRH[] = [];
+  const rhLabels = ["socios", "rh lpl", "rh rafcorte", "rh lima"];
+
+  for (let r = 0; r < matrix.length; r++) {
+    const row = (matrix[r] ?? []) as unknown[];
+    const label = norm(row[1]);
+    if (rhLabels.some((l) => label.includes(l.replace(" ", "")) || label === l)) {
+      // Somar todos os meses disponíveis (colunas 2-13)
+      let total = 0;
+      let count = 0;
+      for (let c = 2; c <= 13; c++) {
+        const v = toNum(row[c]);
+        if (v > 0) { total += v; count++; }
+      }
+      const media = count > 0 ? total / count : 0;
+      rhItems.push({ unidade: String(row[1] ?? "").trim(), valor: media });
+    }
+  }
+
+  return rhItems;
+}
+
+// ─── Construção do FinanceiroSummary ──────────────────────────────────────────
+
+export function buildFinanceiroSummaryFromDreNovo(
+  evolucao: EvolucaoMensal[],
+  retirada_socios: number,
+  plano_contas: PlanoContaItem[],
+  custo_rh: CustoRH[]
+): FinanceiroSummary {
+  // Filtrar apenas meses com dados reais (receita > 0 ou custos > 0)
+  const mesesComDados = evolucao.filter(
+    (m) => m.receita !== 0 || m.custos !== 0 || m.despesas !== 0 || m.ebitda !== 0
+  );
+
+  const sum = (field: keyof EvolucaoMensal) =>
+    mesesComDados.reduce((acc, m) => acc + (m[field] as number), 0);
+
+  const receita_total = sum("receita");
+  const receita_liquida = sum("receita_liquida");
+  const custos = sum("custos");
+  const despesas = sum("despesas");
+  const tributos_vendas = sum("tributos_vendas");
+  const despesas_vendas = sum("despesas_vendas");
+  const ebitda = sum("ebitda");
+  const resultado_financeiro = sum("resultado_financeiro");
+  const aplicacoes = sum("aplicacoes");
+  const emprestimos = sum("emprestimos");
+  const resultado_liquido = sum("resultado");
+
+  const lucro_bruto = receita_liquida - custos;
+  const margem_pct = receita_total !== 0 ? (resultado_liquido / receita_total) * 100 : 0;
+  const margem_ebitda_pct = receita_total !== 0 ? (ebitda / receita_total) * 100 : 0;
+
+  const ano_referencia =
+    mesesComDados.length > 0 ? mesesComDados[0].ano : new Date().getFullYear();
+
+  return {
+    receita_total,
+    receita_liquida,
+    custos,
+    despesas,
+    lucro_bruto,
+    resultado_liquido,
+    ebitda,
+    margem_pct,
+    margem_ebitda_pct,
+    tributos_vendas,
+    despesas_vendas,
+    resultado_financeiro,
+    aplicacoes,
+    emprestimos,
+    retirada_socios,
+    evolucao_mensal: evolucao,
+    custo_rh,
+    plano_contas,
+    meses_com_dados: mesesComDados.length,
+    ano_referencia,
+  };
+}
+
+// ─── Compatibilidade retroativa: buildFinanceiroSummary ───────────────────────
+// Mantida para não quebrar a API route existente enquanto não é migrada.
+
+export function buildFinanceiroSummary(rows: ParsedFinanceiroRow[]) {
+  const RECEITA_KEYS = ["faturamento", "receita"];
+  const CUSTO_KEYS = ["cmv", "custo produto", "custo do produto"];
+
   let receita_total = 0;
   let custos = 0;
   let despesas = 0;
@@ -204,7 +331,7 @@ export function buildFinanceiroSummary(rows: ParsedFinanceiroRow[]): FinanceiroS
     const key = `${r.ano}-${r.mes}`;
 
     if (!monthly.has(key)) {
-      monthly.set(key, { mes: r.mes, ano: r.ano, receita: 0, custos: 0, despesas: 0, resultado: 0 });
+      monthly.set(key, emptyEvolucao(r.mes, r.ano));
     }
     const m = monthly.get(key)!;
 
@@ -228,30 +355,35 @@ export function buildFinanceiroSummary(rows: ParsedFinanceiroRow[]): FinanceiroS
     .sort((a, b) => a.ano - b.ano || a.mes - b.mes)
     .map((m) => ({ ...m, resultado: m.receita - m.custos - m.despesas }));
 
-  return { receita_total, custos, despesas, lucro_bruto, resultado_liquido, margem_pct, evolucao_mensal };
+  return {
+    receita_total,
+    receita_liquida: receita_total,
+    custos,
+    despesas,
+    lucro_bruto,
+    resultado_liquido,
+    ebitda: resultado_liquido,
+    margem_pct,
+    margem_ebitda_pct: margem_pct,
+    tributos_vendas: 0,
+    despesas_vendas: 0,
+    resultado_financeiro: 0,
+    aplicacoes: 0,
+    emprestimos: 0,
+    retirada_socios: 0,
+    evolucao_mensal,
+    custo_rh: [],
+    plano_contas: [],
+    meses_com_dados: evolucao_mensal.length,
+    ano_referencia: new Date().getFullYear(),
+  } as FinanceiroSummary;
 }
 
-/**
- * Procura, dentro das primeiras `MAX_HEADER_SCAN_ROWS` linhas da planilha, a
- * linha que funciona como cabeçalho real: precisa conter pelo menos uma
- * coluna de categoria/DRE E uma coluna de valor.
- */
-function findHeaderRow(matrix: unknown[][]): { index: number; headers: string[] } | null {
-  const limit = Math.min(matrix.length, MAX_HEADER_SCAN_ROWS);
-  for (let i = 0; i < limit; i++) {
-    const headers = (matrix[i] || []).map(normalizeHeader);
-    const hasCategoria = headers.some((h) => CATEGORIA_HEADER_KEYS.some((k) => h.includes(k)));
-    const hasValor = headers.some((h) => VALOR_HEADER_KEYS.some((k) => h.includes(k)));
-    if (hasCategoria && hasValor) {
-      return { index: i, headers };
-    }
-  }
-  return null;
-}
+// ─── Função principal de parse do arquivo ─────────────────────────────────────
 
 export async function parseFinanceiroXLS(
   buffer: Buffer,
-  password = "DRE2025"
+  _password = "DRE2025"
 ): Promise<{
   rows: ParsedFinanceiroRow[];
   summary: FinanceiroSummary;
@@ -259,101 +391,71 @@ export async function parseFinanceiroXLS(
 }> {
   const errors: string[] = [];
   const rows: ParsedFinanceiroRow[] = [];
-  const sheetsInspected: { sheet: string; headers: string[] }[] = [];
 
-  const decrypted = await decryptWorkbookBuffer(buffer, password);
-  const workbook = XLSX.read(decrypted, { type: "buffer" });
+  let workbook: XLSX.WorkBook;
+  try {
+    workbook = XLSX.read(buffer, { type: "buffer" });
+  } catch (err) {
+    errors.push(`Erro ao abrir o arquivo: ${String(err)}`);
+    return { rows, summary: buildFinanceiroSummary([]), errors };
+  }
 
-  console.log("[financeiro] Abas encontradas:", workbook.SheetNames);
+  const sheetNames = workbook.SheetNames;
+  console.log("[financeiro] Abas encontradas:", sheetNames);
 
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
-      header: 1,
-      raw: false,
-      defval: "",
-    });
+  // ── 1. Aba "DRE novo" ─────────────────────────────────────────────────────
+  const dreNovoCandidates = sheetNames.filter((n) =>
+    norm(n).includes("dre") && norm(n).includes("nov")
+  );
+  const dreNovoName = dreNovoCandidates[0] ?? sheetNames.find((n) => norm(n) === "dre novo");
 
-    console.log(`[financeiro] Aba "${sheetName}" - primeiras 10 linhas:`, matrix.slice(0, 10));
+  let evolucao: EvolucaoMensal[] = [];
+  let retirada_socios = 0;
+  const ANO = 2026;
 
-    if (matrix.length === 0) continue;
+  if (dreNovoName) {
+    console.log(`[financeiro] Usando aba DRE: "${dreNovoName}"`);
+    const result = parseDreNovo(workbook.Sheets[dreNovoName], ANO);
+    evolucao = result.evolucao;
+    retirada_socios = result.retirada_socios;
 
-    const headerInfo = findHeaderRow(matrix);
-    if (!headerInfo) {
-      sheetsInspected.push({ sheet: sheetName, headers: (matrix[0] || []).map(normalizeHeader) });
-      console.log(`[financeiro] Aba "${sheetName}" - nenhum cabeçalho compatível encontrado.`);
-      continue;
-    }
-
-    const { index: headerRowIndex, headers } = headerInfo;
-    console.log(`[financeiro] Aba "${sheetName}" - cabeçalho na linha ${headerRowIndex + 1}:`, headers);
-    sheetsInspected.push({ sheet: sheetName, headers });
-
-    for (let r = headerRowIndex + 1; r < matrix.length; r++) {
-      const rawRow = matrix[r] || [];
-      if (rawRow.every((c) => cleanStr(c).trim() === "")) continue;
-
-      const row: Record<string, unknown> = {};
-      headers.forEach((h, idx) => {
-        if (h) row[h] = rawRow[idx];
-      });
-
-      const normKeys = Object.keys(row);
-
-      const getCol = (patterns: string[]): unknown => {
-        for (const p of patterns) {
-          const idx = normKeys.findIndex((k) => k.includes(p));
-          if (idx >= 0) return row[normKeys[idx]];
-        }
-        return "";
+    // Converter para ParsedFinanceiroRow[] (compatibilidade com tabela existente)
+    for (const ev of evolucao) {
+      const addRow = (cat: string, tipo: "entrada" | "saida", val: number) => {
+        if (val !== 0) rows.push({ mes: ev.mes, ano: ev.ano, categoria: cat, tipo, valor: val, descricao: "" });
       };
-
-      const categoria = cleanStr(getCol(CATEGORIA_HEADER_KEYS)).trim();
-      if (!categoria) continue;
-
-      const categoriaLower = stripAccents(categoria).toLowerCase();
-      if (EXCLUDE_KEYS.some((k) => categoriaLower.includes(k))) continue;
-
-      const valorReal = toNumber(getCol(["valor real", "valor pago", "valor liquidado"]));
-      const valor = valorReal !== 0 ? valorReal : toNumber(getCol(VALOR_HEADER_KEYS));
-      if (valor === 0) continue;
-
-      const tipoRaw = stripAccents(cleanStr(getCol(["tipo lancamento", "tipo", "natureza"]))).toLowerCase();
-      const tipo: "entrada" | "saida" | "outro" = tipoRaw.includes("entrada")
-        ? "entrada"
-        : tipoRaw.includes("saida")
-        ? "saida"
-        : "outro";
-
-      let mes = detectMes(getCol(["mes/ano", "mes lanc", "mes"]));
-      let ano = detectAno(getCol(["mes/ano", "ano lanc", "ano"]));
-      if (!mes || !ano) {
-        const dataRef = getCol(DATA_HEADER_KEYS);
-        if (!mes) mes = detectMes(dataRef);
-        if (!ano) ano = detectAno(dataRef);
-      }
-      if (!ano) ano = 2026;
-      if (!mes) mes = 1;
-
-      const descricao = cleanStr(getCol(["fornecedor", "cliente", "observ", "descricao", "historico"])).trim();
-
-      rows.push({ mes, ano, categoria, tipo, valor, descricao });
+      addRow("FATURAMENTO", "entrada", ev.receita);
+      addRow("DESPESAS VENDAS", "saida", ev.despesas_vendas);
+      addRow("TRIBUTOS VENDAS", "saida", ev.tributos_vendas);
+      addRow("CMV", "saida", ev.custos);
+      addRow("ADM", "saida", ev.despesas);
+      addRow("APLICAÇÕES", "entrada", ev.aplicacoes);
+      addRow("EMPRESTIMOS", "saida", ev.emprestimos);
     }
+  } else {
+    errors.push('Aba "DRE novo" não encontrada. Verifique se o arquivo é o "Custo - DRE 2026.xlsx".');
   }
 
-  if (rows.length === 0) {
-    if (sheetsInspected.length === 0) {
-      errors.push("A planilha está vazia ou não possui abas com dados.");
-    } else {
-      const detalhe = sheetsInspected
-        .map((s) => `Aba "${s.sheet}": colunas encontradas [${s.headers.filter(Boolean).join(", ")}]`)
-        .join(" | ");
-      errors.push(
-        `Nenhuma linha de DRE foi identificada na planilha. Verifique se há uma aba com uma coluna de categoria (DRE/Categoria/Classificação/Conta/Grupo) e uma coluna de valor (Valor/Valor Real/Total/Receita/Despesa). ${detalhe}`
-      );
-    }
+  // ── 2. Aba "Plano de contas" ───────────────────────────────────────────────
+  const planoName = sheetNames.find((n) => norm(n).includes("plano") && norm(n).includes("conta"));
+  let plano_contas: PlanoContaItem[] = [];
+  if (planoName) {
+    plano_contas = parsePlanoContas(workbook.Sheets[planoName]);
+    console.log(`[financeiro] Plano de contas: ${plano_contas.length} itens`);
   }
 
-  const summary = buildFinanceiroSummary(rows);
+  // ── 3. Aba "Custo Orçamento" ───────────────────────────────────────────────
+  const custoOrcName = sheetNames.find((n) => norm(n).includes("custo") && norm(n).includes("orc"));
+  let custo_rh: CustoRH[] = [];
+  if (custoOrcName) {
+    custo_rh = parseCustoOrcamento(workbook.Sheets[custoOrcName]);
+    console.log(`[financeiro] Custo RH: ${custo_rh.length} unidades`);
+  }
+
+  if (rows.length === 0 && evolucao.length === 0) {
+    errors.push("Nenhum dado financeiro foi encontrado na planilha.");
+  }
+
+  const summary = buildFinanceiroSummaryFromDreNovo(evolucao, retirada_socios, plano_contas, custo_rh);
   return { rows, summary, errors };
 }
