@@ -7,6 +7,7 @@ import {
 } from "@/lib/parsers/parse-financeiro";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   if (!process.env.DATABASE_URL) {
