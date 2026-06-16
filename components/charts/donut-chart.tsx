@@ -11,13 +11,13 @@ import {
 
 const COLORS = [
   "#1b98e0",
-  "#00e5ff",
-  "#00e676",
-  "#ffb300",
-  "#ff4d6d",
-  "#b388ff",
-  "#ff80ab",
-  "#69f0ae",
+  "#13233d",
+  "#059669",
+  "#F59E0B",
+  "#DC2626",
+  "#7C3AED",
+  "#0891B2",
+  "#D97706",
 ];
 
 interface DonutChartProps {
@@ -44,50 +44,42 @@ const CustomTooltip = ({
   const item = payload[0];
   const color = item.payload.color || "#1b98e0";
   return (
-    <div
-      style={{
-        background: "rgba(8,18,28,0.96)",
-        border: `1px solid ${color}40`,
-        borderRadius: 10,
-        padding: "10px 14px",
-        backdropFilter: "blur(20px)",
-        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 16px ${color}15`,
-        minWidth: 150,
-      }}
-    >
-      <p
-        style={{
-          color: "#8fa3bc",
-          fontSize: 11,
+    <div style={{
+      background: "#ffffff",
+      border: "1px solid #E5E7EB",
+      borderRadius: 12,
+      padding: "12px 16px",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+      minWidth: 160,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        marginBottom: 8, paddingBottom: 8,
+        borderBottom: "1px solid #F3F4F6",
+      }}>
+        <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+        <span style={{
+          color: "#374151", fontSize: 12,
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 600,
-          margin: "0 0 6px 0",
-        }}
-      >
-        {item.name}
-      </p>
-      <p
-        style={{
-          color: "#e0ecf8",
-          fontSize: 15,
-          fontFamily: "'Rajdhani', sans-serif",
-          fontWeight: 700,
-          margin: "0 0 2px 0",
-        }}
-      >
+        }}>
+          {item.name}
+        </span>
+      </div>
+      <div style={{
+        color: "#111827", fontSize: 16,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontWeight: 800, marginBottom: 4,
+      }}>
         {formatValue(item.value)}
-      </p>
-      <p
-        style={{
-          color: color,
-          fontSize: 12,
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 600,
-          margin: 0,
-        }}
-      >
+      </div>
+      <div style={{
+        color: color, fontSize: 12,
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontWeight: 700,
+      }}>
         {(item.payload.percent * 100).toFixed(1)}% do total
-      </p>
+      </div>
     </div>
   );
 };
@@ -99,45 +91,26 @@ const CustomLegend = ({
 }) => {
   if (!payload) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
       {payload.map((entry, i) => (
-        <div
-          key={i}
-          style={{ display: "flex", alignItems: "center", gap: 8 }}
-        >
-          <div
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: entry.color,
-              boxShadow: `0 0 6px ${entry.color}`,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              color: "#8fa3bc",
-              fontSize: 11,
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 500,
-              flex: 1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 10, height: 10, borderRadius: "50%",
+            background: entry.color, flexShrink: 0,
+          }} />
+          <span style={{
+            color: "#374151", fontSize: 12,
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 500, flex: 1,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
             {entry.value}
           </span>
-          <span
-            style={{
-              color: "#c8d8e8",
-              fontSize: 12,
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
+          <span style={{
+            color: "#111827", fontSize: 13,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700, flexShrink: 0,
+          }}>
             {(entry.payload.percent * 100).toFixed(1)}%
           </span>
         </div>
@@ -160,20 +133,6 @@ export function UBGDonutChart({
     <div>
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
-          <defs>
-            {data.map((entry, i) => {
-              const c = entry.color || COLORS[i % COLORS.length];
-              return (
-                <filter key={`glow-pie-${i}`} id={`glow-pie-${i}`}>
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              );
-            })}
-          </defs>
           <Pie
             data={data}
             cx="50%"
@@ -183,16 +142,12 @@ export function UBGDonutChart({
             paddingAngle={3}
             dataKey="value"
             strokeWidth={2}
-            stroke="rgba(8,18,28,0.8)"
+            stroke="#ffffff"
           >
             {data.map((entry, index) => {
               const color = entry.color || COLORS[index % COLORS.length];
               return (
-                <Cell
-                  key={index}
-                  fill={color}
-                  style={{ filter: `drop-shadow(0 0 6px ${color}50)` }}
-                />
+                <Cell key={index} fill={color} />
               );
             })}
           </Pie>
@@ -210,25 +165,20 @@ export function UBGDonutChart({
       {(centerLabel || centerValue) && (
         <div style={{ textAlign: "center", marginTop: -8 }}>
           {centerValue && (
-            <div
-              style={{
-                fontSize: 18,
-                fontFamily: "'Rajdhani', sans-serif",
-                fontWeight: 700,
-                color: "#e0ecf8",
-              }}
-            >
+            <div style={{
+              fontSize: 18,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800, color: "#111827",
+            }}>
               {centerValue}
             </div>
           )}
           {centerLabel && (
-            <div
-              style={{
-                fontSize: 11,
-                fontFamily: "'Space Grotesk', sans-serif",
-                color: "#5a7a99",
-              }}
-            >
+            <div style={{
+              fontSize: 11,
+              fontFamily: "'Space Grotesk', sans-serif",
+              color: "#9CA3AF",
+            }}>
               {centerLabel}
             </div>
           )}

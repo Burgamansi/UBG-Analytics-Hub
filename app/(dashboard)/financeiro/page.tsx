@@ -49,7 +49,7 @@ const DEMO_SUMMARY: FinanceiroSummary = {
   ano_referencia: new Date().getFullYear(),
 };
 
-// ── Section Card dark glassmorphism ──────────────────────────────────────────
+// ── Section Card — Light Executive ───────────────────────────────────────────
 function SectionCard({
   title,
   subtitle,
@@ -66,33 +66,32 @@ function SectionCard({
   return (
     <div
       style={{
-        background: "rgba(13,24,38,0.7)",
-        border: "1px solid rgba(27,152,224,0.12)",
-        borderTop: `2px solid ${accentColor}`,
-        borderRadius: 14,
-        padding: "20px 22px",
-        backdropFilter: "blur(12px)",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+        background: "#ffffff",
+        border: "1px solid #E5E7EB",
+        borderTop: `3px solid ${accentColor}`,
+        borderRadius: 16,
+        overflow: "hidden",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
       <div
         style={{
+          padding: "18px 24px 14px",
+          borderBottom: "1px solid #F3F4F6",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          marginBottom: 16,
         }}
       >
         <div>
           <p
             style={{
-              fontSize: 10,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 15,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: accentColor,
-              margin: "0 0 4px 0",
+              color: "#111827",
+              margin: "0 0 3px 0",
+              letterSpacing: "-0.01em",
             }}
           >
             {title}
@@ -101,8 +100,8 @@ function SectionCard({
             <p
               style={{
                 fontSize: 12,
-                fontFamily: "'Space Grotesk', sans-serif",
-                color: "#5a7a99",
+                fontFamily: "'Inter', sans-serif",
+                color: "#9CA3AF",
                 margin: 0,
               }}
             >
@@ -113,21 +112,22 @@ function SectionCard({
         {badge && (
           <span
             style={{
-              fontSize: 10,
+              fontSize: 11,
               fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 600,
+              fontWeight: 700,
               color: accentColor,
               background: `${accentColor}15`,
               border: `1px solid ${accentColor}30`,
-              borderRadius: 6,
-              padding: "3px 8px",
+              borderRadius: 20,
+              padding: "3px 10px",
+              flexShrink: 0,
             }}
           >
             {badge}
           </span>
         )}
       </div>
-      {children}
+      <div style={{ padding: "20px 24px" }}>{children}</div>
     </div>
   );
 }
@@ -143,13 +143,13 @@ function EmptyState() {
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        color: "#2d4a62",
+        color: "#9CA3AF",
       }}
     >
       <BarChart3 style={{ width: 28, height: 28, opacity: 0.4 }} />
       <p
         style={{
-          fontSize: 12,
+          fontSize: 13,
           fontFamily: "'Space Grotesk', sans-serif",
           margin: 0,
         }}
@@ -160,7 +160,7 @@ function EmptyState() {
   );
 }
 
-// ── Metric Row Card ───────────────────────────────────────────────────────────
+// ── Metric Row — Light ────────────────────────────────────────────────────────
 function MetricRow({
   label,
   value,
@@ -178,16 +178,16 @@ function MetricRow({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "10px 0",
-        borderBottom: "1px solid rgba(27,152,224,0.07)",
+        padding: "11px 0",
+        borderBottom: "1px solid #F3F4F6",
       }}
     >
       <div>
         <p
           style={{
-            fontSize: 12,
-            fontFamily: "'Space Grotesk', sans-serif",
-            color: "#5a7a99",
+            fontSize: 13,
+            fontFamily: "'Inter', sans-serif",
+            color: "#374151",
             margin: 0,
           }}
         >
@@ -196,9 +196,9 @@ function MetricRow({
         {sub && (
           <p
             style={{
-              fontSize: 10,
-              fontFamily: "'Space Grotesk', sans-serif",
-              color: "#2d4a62",
+              fontSize: 11,
+              fontFamily: "'Inter', sans-serif",
+              color: "#9CA3AF",
               margin: "2px 0 0 0",
             }}
           >
@@ -209,13 +209,99 @@ function MetricRow({
       <span
         style={{
           fontSize: 16,
-          fontFamily: "'Rajdhani', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontWeight: 700,
           color,
         }}
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ── Derived Metric Card — Light ───────────────────────────────────────────────
+function DerivedCard({
+  title,
+  subtitle,
+  value,
+  isPositive,
+  accentColor,
+  details,
+}: {
+  title: string;
+  subtitle: string;
+  value: string;
+  isPositive: boolean;
+  accentColor: string;
+  details?: { label: string; value: string; color: string }[];
+}) {
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1px solid #E5E7EB",
+        borderTop: `3px solid ${accentColor}`,
+        borderRadius: 16,
+        padding: "20px 24px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11,
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#9CA3AF",
+          margin: "0 0 4px 0",
+        }}
+      >
+        {title}
+      </p>
+      <p
+        style={{
+          fontSize: 12,
+          fontFamily: "'Inter', sans-serif",
+          color: "#6B7280",
+          margin: "0 0 12px 0",
+        }}
+      >
+        {subtitle}
+      </p>
+      <p
+        style={{
+          fontSize: 34,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontWeight: 800,
+          color: isPositive ? "#111827" : "#DC2626",
+          margin: "0 0 10px 0",
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </p>
+      {details && details.length > 0 && (
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          {details.map((d, i) => (
+            <span
+              key={i}
+              style={{
+                fontSize: 11,
+                fontFamily: "'Inter', sans-serif",
+                color: "#6B7280",
+              }}
+            >
+              {d.label}:{" "}
+              <strong style={{ color: d.color, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                {d.value}
+              </strong>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -273,10 +359,10 @@ export default function FinanceiroPage() {
   }));
 
   const distribuicaoCustos = [
-    { name: "CMV", value: d.custos, color: "#ffb300" },
-    { name: "ADM", value: d.despesas, color: "#ff4d6d" },
-    { name: "Tributos Vendas", value: d.tributos_vendas, color: "#b388ff" },
-    { name: "Desp. Vendas", value: d.despesas_vendas, color: "#ff80ab" },
+    { name: "CMV", value: d.custos, color: "#F59E0B" },
+    { name: "ADM", value: d.despesas, color: "#EF4444" },
+    { name: "Tributos Vendas", value: d.tributos_vendas, color: "#8B5CF6" },
+    { name: "Desp. Vendas", value: d.despesas_vendas, color: "#EC4899" },
   ].filter((i) => i.value > 0);
 
   const topContas = [...d.plano_contas]
@@ -311,7 +397,7 @@ export default function FinanceiroPage() {
   ];
 
   return (
-    <div style={{ padding: "24px 28px", maxWidth: 1400 }}>
+    <div style={{ padding: "28px 32px", maxWidth: 1400 }}>
 
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div
@@ -325,11 +411,11 @@ export default function FinanceiroPage() {
         <div>
           <p
             style={{
-              fontSize: 10,
+              fontSize: 11,
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
               textTransform: "uppercase",
-              letterSpacing: "0.12em",
+              letterSpacing: "0.1em",
               color: "#1b98e0",
               margin: "0 0 6px 0",
             }}
@@ -338,21 +424,22 @@ export default function FinanceiroPage() {
           </p>
           <h1
             style={{
-              fontSize: 26,
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 700,
-              color: "#e0ecf8",
+              fontSize: 32,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800,
+              color: "#111827",
               margin: "0 0 6px 0",
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
             }}
           >
             Dashboard Financeiro / DRE
           </h1>
           <p
             style={{
-              fontSize: 13,
-              fontFamily: "'Space Grotesk', sans-serif",
-              color: "#4d6680",
+              fontSize: 14,
+              fontFamily: "'Inter', sans-serif",
+              color: "#6B7280",
               margin: 0,
             }}
           >
@@ -363,36 +450,29 @@ export default function FinanceiroPage() {
         </div>
 
         {hasData && (
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
             <div
               style={{
-                background:
-                  d.ebitda >= 0
-                    ? "rgba(0,230,118,0.1)"
-                    : "rgba(255,77,109,0.1)",
-                border: `1px solid ${d.ebitda >= 0 ? "rgba(0,230,118,0.3)" : "rgba(255,77,109,0.3)"}`,
-                borderRadius: 8,
-                padding: "6px 12px",
+                background: d.ebitda >= 0 ? "#ECFDF5" : "#FEF2F2",
+                border: `1px solid ${d.ebitda >= 0 ? "#A7F3D0" : "#FECACA"}`,
+                borderRadius: 10,
+                padding: "8px 14px",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 7,
               }}
             >
               {d.ebitda >= 0 ? (
-                <TrendingUp
-                  style={{ width: 14, height: 14, color: "#00e676" }}
-                />
+                <TrendingUp style={{ width: 15, height: 15, color: "#059669" }} />
               ) : (
-                <AlertTriangle
-                  style={{ width: 14, height: 14, color: "#ff4d6d" }}
-                />
+                <AlertTriangle style={{ width: 15, height: 15, color: "#DC2626" }} />
               )}
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontWeight: 700,
-                  color: d.ebitda >= 0 ? "#00e676" : "#ff4d6d",
+                  color: d.ebitda >= 0 ? "#059669" : "#DC2626",
                 }}
               >
                 EBITDA {formatMillions(d.ebitda)}
@@ -400,33 +480,28 @@ export default function FinanceiroPage() {
             </div>
             <div
               style={{
-                background:
-                  d.resultado_liquido >= 0
-                    ? "rgba(27,152,224,0.1)"
-                    : "rgba(255,77,109,0.1)",
-                border: `1px solid ${d.resultado_liquido >= 0 ? "rgba(27,152,224,0.3)" : "rgba(255,77,109,0.3)"}`,
-                borderRadius: 8,
-                padding: "6px 12px",
+                background: d.resultado_liquido >= 0 ? "#EFF6FF" : "#FEF2F2",
+                border: `1px solid ${d.resultado_liquido >= 0 ? "#BFDBFE" : "#FECACA"}`,
+                borderRadius: 10,
+                padding: "8px 14px",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 7,
               }}
             >
               <Activity
                 style={{
-                  width: 14,
-                  height: 14,
-                  color:
-                    d.resultado_liquido >= 0 ? "#1b98e0" : "#ff4d6d",
+                  width: 15,
+                  height: 15,
+                  color: d.resultado_liquido >= 0 ? "#1b98e0" : "#DC2626",
                 }}
               />
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontWeight: 700,
-                  color:
-                    d.resultado_liquido >= 0 ? "#1b98e0" : "#ff4d6d",
+                  color: d.resultado_liquido >= 0 ? "#1b98e0" : "#DC2626",
                 }}
               >
                 Líquido {formatMillions(d.resultado_liquido)}
@@ -440,40 +515,25 @@ export default function FinanceiroPage() {
       {!loading && !available && (
         <div
           style={{
-            background: "rgba(27,152,224,0.06)",
-            border: "1px solid rgba(27,152,224,0.2)",
+            background: "#EFF6FF",
+            border: "1px solid #BFDBFE",
             borderRadius: 12,
-            padding: "14px 18px",
+            padding: "14px 20px",
             display: "flex",
             alignItems: "flex-start",
             gap: 12,
             marginBottom: 24,
           }}
         >
-          <Info
-            style={{
-              width: 18,
-              height: 18,
-              color: "#1b98e0",
-              flexShrink: 0,
-              marginTop: 1,
-            }}
-          />
-          <p
-            style={{
-              fontSize: 13,
-              fontFamily: "'Space Grotesk', sans-serif",
-              color: "#8fa3bc",
-              margin: 0,
-            }}
-          >
-            <strong style={{ color: "#c8d8e8" }}>Nenhum dado importado ainda.</strong>{" "}
+          <Info style={{ width: 18, height: 18, color: "#1b98e0", flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 13, fontFamily: "'Inter', sans-serif", color: "#374151", margin: 0 }}>
+            <strong style={{ color: "#111827" }}>Nenhum dado importado ainda.</strong>{" "}
             Vá em{" "}
             <strong style={{ color: "#1b98e0" }}>Upload de Dados</strong>,
             selecione o módulo{" "}
             <strong style={{ color: "#1b98e0" }}>Financeiro / DRE</strong> e
             envie a planilha{" "}
-            <strong style={{ color: "#c8d8e8" }}>Custo - DRE 2026.xlsx</strong>{" "}
+            <strong style={{ color: "#111827" }}>Custo - DRE 2026.xlsx</strong>{" "}
             para alimentar este painel.
           </p>
         </div>
@@ -493,7 +553,7 @@ export default function FinanceiroPage() {
           value={formatMillions(d.receita_total)}
           subtitle="Receita bruta acumulada"
           icon={DollarSign}
-          accentColor="#00e676"
+          accentColor="#059669"
         />
         <KPICard
           title="Receita Líquida"
@@ -507,14 +567,14 @@ export default function FinanceiroPage() {
           value={formatMillions(d.ebitda)}
           subtitle="Resultado operacional"
           icon={BarChart3}
-          accentColor={d.ebitda >= 0 ? "#00e5ff" : "#ff4d6d"}
+          accentColor={d.ebitda >= 0 ? "#1b98e0" : "#DC2626"}
         />
         <KPICard
           title="Margem EBITDA"
           value={formatPercent(d.margem_ebitda_pct)}
           subtitle="EBITDA / Faturamento"
           icon={Percent}
-          accentColor={d.margem_ebitda_pct >= 0 ? "#00e676" : "#ff4d6d"}
+          accentColor={d.margem_ebitda_pct >= 0 ? "#059669" : "#DC2626"}
         />
       </div>
 
@@ -532,28 +592,28 @@ export default function FinanceiroPage() {
           value={formatMillions(d.custos)}
           subtitle="Custo de Mercadoria Vendida"
           icon={TrendingDown}
-          accentColor="#ffb300"
+          accentColor="#F59E0B"
         />
         <KPICard
           title="Despesas ADM"
           value={formatMillions(d.despesas)}
           subtitle="Despesas administrativas"
           icon={Wallet}
-          accentColor="#ff4d6d"
+          accentColor="#EF4444"
         />
         <KPICard
           title="Resultado Líquido"
           value={formatMillions(d.resultado_liquido)}
           subtitle="Após resultado financeiro"
           icon={Activity}
-          accentColor={d.resultado_liquido >= 0 ? "#00e676" : "#ff4d6d"}
+          accentColor={d.resultado_liquido >= 0 ? "#059669" : "#DC2626"}
         />
         <KPICard
           title="Margem Líquida"
           value={formatPercent(d.margem_pct)}
           subtitle="Resultado líquido / Faturamento"
           icon={Percent}
-          accentColor={d.margem_pct >= 0 ? "#1b98e0" : "#ff4d6d"}
+          accentColor={d.margem_pct >= 0 ? "#1b98e0" : "#DC2626"}
         />
       </div>
 
@@ -566,84 +626,35 @@ export default function FinanceiroPage() {
           marginBottom: 28,
         }}
       >
-        <SectionCard title="Lucro Bruto" subtitle="Receita Líquida − CMV" accentColor="#1b98e0">
-          <p
-            style={{
-              fontSize: 32,
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-              color: d.lucro_bruto >= 0 ? "#e0ecf8" : "#ff4d6d",
-              margin: 0,
-              textShadow: `0 0 20px ${d.lucro_bruto >= 0 ? "rgba(27,152,224,0.3)" : "rgba(255,77,109,0.3)"}`,
-            }}
-          >
-            {formatMillions(d.lucro_bruto)}
-          </p>
-        </SectionCard>
-
-        <SectionCard
+        <DerivedCard
+          title="Lucro Bruto"
+          subtitle="Receita Líquida − CMV"
+          value={formatMillions(d.lucro_bruto)}
+          isPositive={d.lucro_bruto >= 0}
+          accentColor="#1b98e0"
+        />
+        <DerivedCard
           title="Resultado Financeiro"
           subtitle="Aplicações − Empréstimos"
-          accentColor="#00e5ff"
-        >
-          <p
-            style={{
-              fontSize: 32,
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-              color: d.resultado_financeiro >= 0 ? "#e0ecf8" : "#ff4d6d",
-              margin: "0 0 10px 0",
-            }}
-          >
-            {formatMillions(d.resultado_financeiro)}
-          </p>
-          <div style={{ display: "flex", gap: 16 }}>
-            <span style={{ fontSize: 11, fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a99" }}>
-              Aplicações:{" "}
-              <strong style={{ color: "#00e676" }}>
-                {formatMillions(d.aplicacoes)}
-              </strong>
-            </span>
-            <span style={{ fontSize: 11, fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a99" }}>
-              Empréstimos:{" "}
-              <strong style={{ color: "#ff4d6d" }}>
-                {formatMillions(d.emprestimos)}
-              </strong>
-            </span>
-          </div>
-        </SectionCard>
-
-        <SectionCard
+          value={formatMillions(d.resultado_financeiro)}
+          isPositive={d.resultado_financeiro >= 0}
+          accentColor="#0EA5E9"
+          details={[
+            { label: "Aplicações", value: formatMillions(d.aplicacoes), color: "#059669" },
+            { label: "Empréstimos", value: formatMillions(d.emprestimos), color: "#DC2626" },
+          ]}
+        />
+        <DerivedCard
           title="Deduções da Receita"
           subtitle="Tributos + Despesas de Vendas"
-          accentColor="#b388ff"
-        >
-          <p
-            style={{
-              fontSize: 32,
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-              color: "#e0ecf8",
-              margin: "0 0 10px 0",
-            }}
-          >
-            {formatMillions(d.tributos_vendas + d.despesas_vendas)}
-          </p>
-          <div style={{ display: "flex", gap: 16 }}>
-            <span style={{ fontSize: 11, fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a99" }}>
-              Tributos:{" "}
-              <strong style={{ color: "#b388ff" }}>
-                {formatMillions(d.tributos_vendas)}
-              </strong>
-            </span>
-            <span style={{ fontSize: 11, fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a99" }}>
-              Desp. Vendas:{" "}
-              <strong style={{ color: "#ff80ab" }}>
-                {formatMillions(d.despesas_vendas)}
-              </strong>
-            </span>
-          </div>
-        </SectionCard>
+          value={formatMillions(d.tributos_vendas + d.despesas_vendas)}
+          isPositive={false}
+          accentColor="#8B5CF6"
+          details={[
+            { label: "Tributos", value: formatMillions(d.tributos_vendas), color: "#8B5CF6" },
+            { label: "Desp. Vendas", value: formatMillions(d.despesas_vendas), color: "#EC4899" },
+          ]}
+        />
       </div>
 
       {/* ── Abas de Análise ──────────────────────────────────────────────── */}
@@ -653,7 +664,10 @@ export default function FinanceiroPage() {
           style={{
             display: "flex",
             gap: 4,
-            borderBottom: "1px solid rgba(27,152,224,0.12)",
+            background: "#F3F4F6",
+            padding: 4,
+            borderRadius: 12,
+            width: "fit-content",
             marginBottom: 20,
           }}
         >
@@ -662,17 +676,18 @@ export default function FinanceiroPage() {
               key={tab.key}
               onClick={() => setAbaAtiva(tab.key)}
               style={{
-                padding: "10px 18px",
-                fontSize: 12,
+                padding: "8px 20px",
+                fontSize: 13,
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontWeight: 600,
                 border: "none",
-                background: "transparent",
+                borderRadius: 9,
                 cursor: "pointer",
-                borderBottom: `2px solid ${abaAtiva === tab.key ? "#1b98e0" : "transparent"}`,
-                color: abaAtiva === tab.key ? "#1b98e0" : "#3d5570",
-                transition: "all 0.2s ease",
-                letterSpacing: "0.02em",
+                transition: "all 0.15s ease",
+                background: abaAtiva === tab.key ? "#ffffff" : "transparent",
+                color: abaAtiva === tab.key ? "#13233d" : "#6B7280",
+                boxShadow: abaAtiva === tab.key ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                letterSpacing: "0.01em",
               }}
             >
               {tab.label}
@@ -693,11 +708,11 @@ export default function FinanceiroPage() {
                 <UBGLineChart
                   data={evolucaoData}
                   lines={[
-                    { key: "receita", label: "Faturamento", color: "#00e676" },
+                    { key: "receita", label: "Faturamento", color: "#059669" },
                     { key: "receita_liquida", label: "Rec. Líquida", color: "#1b98e0" },
-                    { key: "custos", label: "CMV", color: "#ffb300" },
-                    { key: "despesas", label: "ADM", color: "#ff4d6d" },
-                    { key: "resultado", label: "Resultado", color: "#00e5ff", dashed: true },
+                    { key: "custos", label: "CMV", color: "#F59E0B" },
+                    { key: "despesas", label: "ADM", color: "#EF4444" },
+                    { key: "resultado", label: "Resultado", color: "#8B5CF6", dashed: true },
                   ]}
                   formatValue={formatMillions}
                   height={300}
@@ -711,13 +726,13 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="EBITDA por Mês"
                 subtitle="Resultado operacional antes de juros e impostos"
-                accentColor="#00e5ff"
+                accentColor="#1b98e0"
               >
                 {hasData ? (
                   <UBGBarChart
                     data={ebitdaData}
                     formatValue={formatMillions}
-                    color="#00e5ff"
+                    color="#1b98e0"
                     height={220}
                     showLabels={false}
                   />
@@ -729,13 +744,13 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="Margem EBITDA (%)"
                 subtitle="EBITDA como % do faturamento por mês"
-                accentColor="#00e676"
+                accentColor="#059669"
               >
                 {hasData ? (
                   <UBGBarChart
                     data={margemData}
                     formatValue={(v) => `${v.toFixed(1)}%`}
-                    color="#00e676"
+                    color="#059669"
                     height={220}
                     showLabels={false}
                   />
@@ -749,13 +764,13 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="Faturamento por Mês"
                 subtitle="Receita bruta mensal"
-                accentColor="#1b98e0"
+                accentColor="#13233d"
               >
                 {hasData ? (
                   <UBGBarChart
                     data={faturamentoData}
                     formatValue={formatMillions}
-                    color="#1b98e0"
+                    color="#13233d"
                     height={220}
                     showLabels={false}
                   />
@@ -767,13 +782,13 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="Resultado Líquido por Mês"
                 subtitle="Lucro ou prejuízo mensal"
-                accentColor="#b388ff"
+                accentColor="#8B5CF6"
               >
                 {hasData ? (
                   <UBGBarChart
                     data={resultadoData}
                     formatValue={formatMillions}
-                    color="#b388ff"
+                    color="#8B5CF6"
                     height={220}
                     showLabels={false}
                   />
@@ -783,7 +798,7 @@ export default function FinanceiroPage() {
               </SectionCard>
             </div>
 
-            {/* Tabela DRE dark */}
+            {/* Tabela DRE Light */}
             <SectionCard
               title="Tabela DRE — Resumo Mensal"
               subtitle="Valores consolidados por mês"
@@ -793,18 +808,18 @@ export default function FinanceiroPage() {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr>
+                      <tr style={{ background: "#F9FAFB" }}>
                         <th
                           style={{
                             textAlign: "left",
-                            padding: "8px 12px 8px 0",
-                            fontSize: 10,
+                            padding: "10px 14px",
+                            fontSize: 11,
                             fontFamily: "'Space Grotesk', sans-serif",
                             fontWeight: 700,
                             textTransform: "uppercase",
-                            letterSpacing: "0.08em",
-                            color: "#3d5570",
-                            borderBottom: "1px solid rgba(27,152,224,0.12)",
+                            letterSpacing: "0.07em",
+                            color: "#6B7280",
+                            borderBottom: "1px solid #E5E7EB",
                           }}
                         >
                           Indicador
@@ -814,14 +829,15 @@ export default function FinanceiroPage() {
                             key={m.mes}
                             style={{
                               textAlign: "right",
-                              padding: "8px 8px",
-                              fontSize: 10,
+                              padding: "10px 10px",
+                              fontSize: 11,
                               fontFamily: "'Space Grotesk', sans-serif",
                               fontWeight: 700,
                               textTransform: "uppercase",
-                              letterSpacing: "0.08em",
-                              color: "#3d5570",
-                              borderBottom: "1px solid rgba(27,152,224,0.12)",
+                              letterSpacing: "0.07em",
+                              color: "#6B7280",
+                              borderBottom: "1px solid #E5E7EB",
+                              whiteSpace: "nowrap",
                             }}
                           >
                             {getMonthShort(m.mes)}
@@ -830,14 +846,14 @@ export default function FinanceiroPage() {
                         <th
                           style={{
                             textAlign: "right",
-                            padding: "8px 0 8px 12px",
-                            fontSize: 10,
+                            padding: "10px 0 10px 14px",
+                            fontSize: 11,
                             fontFamily: "'Space Grotesk', sans-serif",
                             fontWeight: 700,
                             textTransform: "uppercase",
-                            letterSpacing: "0.08em",
+                            letterSpacing: "0.07em",
                             color: "#1b98e0",
-                            borderBottom: "1px solid rgba(27,152,224,0.12)",
+                            borderBottom: "1px solid #E5E7EB",
                           }}
                         >
                           Total
@@ -846,15 +862,15 @@ export default function FinanceiroPage() {
                     </thead>
                     <tbody>
                       {[
-                        { key: "receita" as const, label: "Faturamento", bold: false, color: "#8fa3bc" },
-                        { key: "despesas_vendas" as const, label: "(-) Desp. Vendas", bold: false, color: "#ff80ab" },
-                        { key: "tributos_vendas" as const, label: "(-) Tributos Vendas", bold: false, color: "#b388ff" },
-                        { key: "receita_liquida" as const, label: "Receita Líquida", bold: true, color: "#1b98e0" },
-                        { key: "custos" as const, label: "(-) CMV", bold: false, color: "#ffb300" },
-                        { key: "despesas" as const, label: "(-) ADM", bold: false, color: "#ff4d6d" },
-                        { key: "ebitda" as const, label: "EBITDA", bold: true, color: "#00e5ff" },
-                        { key: "resultado_financeiro" as const, label: "Resultado Financeiro", bold: false, color: "#8fa3bc" },
-                        { key: "resultado" as const, label: "Resultado Líquido", bold: true, color: "#00e676" },
+                        { key: "receita" as const,            label: "Faturamento",          bold: false, color: "#374151" },
+                        { key: "despesas_vendas" as const,    label: "(-) Desp. Vendas",     bold: false, color: "#EC4899" },
+                        { key: "tributos_vendas" as const,    label: "(-) Tributos Vendas",  bold: false, color: "#8B5CF6" },
+                        { key: "receita_liquida" as const,    label: "Receita Líquida",      bold: true,  color: "#1b98e0" },
+                        { key: "custos" as const,             label: "(-) CMV",              bold: false, color: "#F59E0B" },
+                        { key: "despesas" as const,           label: "(-) ADM",              bold: false, color: "#EF4444" },
+                        { key: "ebitda" as const,             label: "EBITDA",               bold: true,  color: "#1b98e0" },
+                        { key: "resultado_financeiro" as const, label: "Resultado Financeiro", bold: false, color: "#374151" },
+                        { key: "resultado" as const,          label: "Resultado Líquido",    bold: true,  color: "#059669" },
                       ].map((row) => {
                         const total = mesesComDados.reduce(
                           (acc, m) => acc + (m[row.key] as number),
@@ -864,19 +880,17 @@ export default function FinanceiroPage() {
                           <tr
                             key={row.key}
                             style={{
-                              borderBottom: "1px solid rgba(27,152,224,0.06)",
-                              background: row.bold
-                                ? "rgba(27,152,224,0.04)"
-                                : "transparent",
+                              borderBottom: "1px solid #F3F4F6",
+                              background: row.bold ? "#F8FAFC" : "transparent",
                             }}
                           >
                             <td
                               style={{
-                                padding: "9px 12px 9px 0",
-                                fontSize: 12,
-                                fontFamily: "'Space Grotesk', sans-serif",
+                                padding: "10px 14px",
+                                fontSize: 13,
+                                fontFamily: "'Inter', sans-serif",
                                 fontWeight: row.bold ? 700 : 400,
-                                color: row.bold ? "#c8d8e8" : "#5a7a99",
+                                color: row.bold ? "#111827" : "#374151",
                               }}
                             >
                               {row.label}
@@ -888,16 +902,11 @@ export default function FinanceiroPage() {
                                   key={m.mes}
                                   style={{
                                     textAlign: "right",
-                                    padding: "9px 8px",
-                                    fontSize: 12,
-                                    fontFamily: "'Rajdhani', sans-serif",
+                                    padding: "10px 10px",
+                                    fontSize: 13,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                                     fontWeight: row.bold ? 700 : 600,
-                                    color:
-                                      v < 0
-                                        ? "#ff4d6d"
-                                        : row.bold
-                                        ? row.color
-                                        : "#8fa3bc",
+                                    color: v < 0 ? "#DC2626" : row.bold ? row.color : "#6B7280",
                                   }}
                                 >
                                   {formatMillions(v)}
@@ -907,11 +916,11 @@ export default function FinanceiroPage() {
                             <td
                               style={{
                                 textAlign: "right",
-                                padding: "9px 0 9px 12px",
+                                padding: "10px 0 10px 14px",
                                 fontSize: 13,
-                                fontFamily: "'Rajdhani', sans-serif",
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
                                 fontWeight: 700,
-                                color: total < 0 ? "#ff4d6d" : row.color,
+                                color: total < 0 ? "#DC2626" : row.color,
                               }}
                             >
                               {formatMillions(total)}
@@ -936,7 +945,7 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="Distribuição de Custos e Despesas"
                 subtitle="Composição percentual do total de custos"
-                accentColor="#ffb300"
+                accentColor="#F59E0B"
               >
                 {distribuicaoCustos.length > 0 ? (
                   <UBGDonutChart
@@ -953,13 +962,13 @@ export default function FinanceiroPage() {
               <SectionCard
                 title="Custo de RH por Unidade"
                 subtitle="Média mensal de custos de pessoal"
-                accentColor="#ff4d6d"
+                accentColor="#EF4444"
               >
                 {custoRHData.length > 0 ? (
                   <UBGHorizontalBar
                     data={custoRHData}
                     formatValue={formatMillions}
-                    color="#ff4d6d"
+                    color="#EF4444"
                   />
                 ) : (
                   <EmptyState />
@@ -970,7 +979,7 @@ export default function FinanceiroPage() {
             <SectionCard
               title="Resultado Financeiro — Aplicações vs Empréstimos"
               subtitle="Evolução mensal das receitas e despesas financeiras"
-              accentColor="#00e5ff"
+              accentColor="#0EA5E9"
             >
               {hasData &&
               resultFinData.some(
@@ -979,9 +988,9 @@ export default function FinanceiroPage() {
                 <UBGLineChart
                   data={resultFinData}
                   lines={[
-                    { key: "aplicacoes", label: "Aplicações", color: "#00e676" },
-                    { key: "emprestimos", label: "Empréstimos", color: "#ff4d6d" },
-                    { key: "resultado_financeiro", label: "Resultado Fin.", color: "#00e5ff", dashed: true },
+                    { key: "aplicacoes", label: "Aplicações", color: "#059669" },
+                    { key: "emprestimos", label: "Empréstimos", color: "#EF4444" },
+                    { key: "resultado_financeiro", label: "Resultado Fin.", color: "#1b98e0", dashed: true },
                   ]}
                   formatValue={formatMillions}
                   height={240}
@@ -991,23 +1000,22 @@ export default function FinanceiroPage() {
               )}
             </SectionCard>
 
-            {/* Resumo de custos */}
             <SectionCard
               title="Resumo de Custos — Acumulado"
               subtitle="Totais acumulados no período"
-              accentColor="#ffb300"
+              accentColor="#F59E0B"
             >
-              <MetricRow label="CMV (Custo Mercadoria Vendida)" value={formatMillions(d.custos)} color="#ffb300" />
-              <MetricRow label="Despesas Administrativas" value={formatMillions(d.despesas)} color="#ff4d6d" />
-              <MetricRow label="Tributos sobre Vendas" value={formatMillions(d.tributos_vendas)} color="#b388ff" />
-              <MetricRow label="Despesas de Vendas" value={formatMillions(d.despesas_vendas)} color="#ff80ab" />
-              <MetricRow label="Empréstimos / Financiamentos" value={formatMillions(d.emprestimos)} color="#ff4d6d" />
+              <MetricRow label="CMV (Custo Mercadoria Vendida)" value={formatMillions(d.custos)} color="#F59E0B" />
+              <MetricRow label="Despesas Administrativas" value={formatMillions(d.despesas)} color="#EF4444" />
+              <MetricRow label="Tributos sobre Vendas" value={formatMillions(d.tributos_vendas)} color="#8B5CF6" />
+              <MetricRow label="Despesas de Vendas" value={formatMillions(d.despesas_vendas)} color="#EC4899" />
+              <MetricRow label="Empréstimos / Financiamentos" value={formatMillions(d.emprestimos)} color="#EF4444" />
               <MetricRow
                 label="Total de Custos e Despesas"
                 value={formatMillions(
                   d.custos + d.despesas + d.tributos_vendas + d.despesas_vendas + d.emprestimos
                 )}
-                color="#e0ecf8"
+                color="#111827"
               />
             </SectionCard>
           </div>
@@ -1036,33 +1044,31 @@ export default function FinanceiroPage() {
             <SectionCard
               title="Plano de Contas — Orçado vs Realizado"
               subtitle="Comparativo de todas as contas do período"
-              accentColor="#00e676"
+              accentColor="#059669"
             >
               {d.plano_contas.length > 0 ? (
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr>
-                        {["Conta", "Orçado", "Realizado", "Variação", "%"].map(
-                          (h) => (
-                            <th
-                              key={h}
-                              style={{
-                                textAlign: h === "Conta" ? "left" : "right",
-                                padding: "8px 10px",
-                                fontSize: 10,
-                                fontFamily: "'Space Grotesk', sans-serif",
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                color: "#3d5570",
-                                borderBottom: "1px solid rgba(27,152,224,0.12)",
-                              }}
-                            >
-                              {h}
-                            </th>
-                          )
-                        )}
+                      <tr style={{ background: "#F9FAFB" }}>
+                        {["Conta", "Orçado", "Realizado", "Variação", "%"].map((h) => (
+                          <th
+                            key={h}
+                            style={{
+                              textAlign: h === "Conta" ? "left" : "right",
+                              padding: "10px 12px",
+                              fontSize: 11,
+                              fontFamily: "'Space Grotesk', sans-serif",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.07em",
+                              color: "#6B7280",
+                              borderBottom: "1px solid #E5E7EB",
+                            }}
+                          >
+                            {h}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
@@ -1074,22 +1080,28 @@ export default function FinanceiroPage() {
                           const variacao = p.realizado - p.orcado;
                           const pct =
                             p.orcado !== 0
-                              ? ((p.realizado - p.orcado) / Math.abs(p.orcado)) *
-                                100
+                              ? ((p.realizado - p.orcado) / Math.abs(p.orcado)) * 100
                               : 0;
                           return (
                             <tr
                               key={i}
                               style={{
-                                borderBottom: "1px solid rgba(27,152,224,0.05)",
+                                borderBottom: "1px solid #F3F4F6",
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLTableRowElement).style.background = "#F9FAFB";
+                              }}
+                              onMouseLeave={(e) => {
+                                (e.currentTarget as HTMLTableRowElement).style.background = "transparent";
                               }}
                             >
                               <td
                                 style={{
-                                  padding: "8px 10px",
-                                  fontSize: 12,
-                                  fontFamily: "'Space Grotesk', sans-serif",
-                                  color: "#8fa3bc",
+                                  padding: "10px 12px",
+                                  fontSize: 13,
+                                  fontFamily: "'Inter', sans-serif",
+                                  color: "#374151",
                                   maxWidth: 220,
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
@@ -1101,11 +1113,11 @@ export default function FinanceiroPage() {
                               <td
                                 style={{
                                   textAlign: "right",
-                                  padding: "8px 10px",
-                                  fontSize: 12,
-                                  fontFamily: "'Rajdhani', sans-serif",
+                                  padding: "10px 12px",
+                                  fontSize: 13,
+                                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                                   fontWeight: 600,
-                                  color: "#5a7a99",
+                                  color: "#9CA3AF",
                                 }}
                               >
                                 {formatMillions(p.orcado)}
@@ -1113,11 +1125,11 @@ export default function FinanceiroPage() {
                               <td
                                 style={{
                                   textAlign: "right",
-                                  padding: "8px 10px",
-                                  fontSize: 12,
-                                  fontFamily: "'Rajdhani', sans-serif",
+                                  padding: "10px 12px",
+                                  fontSize: 13,
+                                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                                   fontWeight: 700,
-                                  color: "#c8d8e8",
+                                  color: "#111827",
                                 }}
                               >
                                 {formatMillions(p.realizado)}
@@ -1125,11 +1137,11 @@ export default function FinanceiroPage() {
                               <td
                                 style={{
                                   textAlign: "right",
-                                  padding: "8px 10px",
-                                  fontSize: 12,
-                                  fontFamily: "'Rajdhani', sans-serif",
+                                  padding: "10px 12px",
+                                  fontSize: 13,
+                                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                                   fontWeight: 700,
-                                  color: variacao > 0 ? "#ff4d6d" : "#00e676",
+                                  color: variacao > 0 ? "#DC2626" : "#059669",
                                 }}
                               >
                                 {variacao > 0 ? "+" : ""}
@@ -1138,11 +1150,11 @@ export default function FinanceiroPage() {
                               <td
                                 style={{
                                   textAlign: "right",
-                                  padding: "8px 10px",
-                                  fontSize: 12,
-                                  fontFamily: "'Rajdhani', sans-serif",
+                                  padding: "10px 12px",
+                                  fontSize: 13,
+                                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                                   fontWeight: 700,
-                                  color: pct > 0 ? "#ff4d6d" : "#00e676",
+                                  color: pct > 0 ? "#DC2626" : "#059669",
                                 }}
                               >
                                 {pct > 0 ? "+" : ""}

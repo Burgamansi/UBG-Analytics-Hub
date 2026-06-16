@@ -40,69 +40,49 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      style={{
-        background: "rgba(8,18,28,0.96)",
-        border: "1px solid rgba(27,152,224,0.35)",
-        borderRadius: 10,
-        padding: "12px 16px",
-        backdropFilter: "blur(20px)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(27,152,224,0.12)",
-        minWidth: 160,
-      }}
-    >
-      <p
-        style={{
-          color: "#5a7a99",
-          fontSize: 11,
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.07em",
-          margin: "0 0 8px 0",
-        }}
-      >
+    <div style={{
+      background: "#ffffff",
+      border: "1px solid #E5E7EB",
+      borderRadius: 12,
+      padding: "12px 16px",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+      minWidth: 170,
+    }}>
+      <p style={{
+        color: "#6B7280",
+        fontSize: 11,
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.07em",
+        margin: "0 0 8px 0",
+        paddingBottom: 8,
+        borderBottom: "1px solid #F3F4F6",
+      }}>
         {label}
       </p>
       {payload.map((p, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: i < payload.length - 1 ? 4 : 0,
-          }}
-        >
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: p.color,
-              boxShadow: `0 0 6px ${p.color}`,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              color: "#8fa3bc",
-              fontSize: 11,
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 500,
-              minWidth: 80,
-            }}
-          >
+        <div key={i} style={{
+          display: "flex", alignItems: "center",
+          gap: 8,
+          marginBottom: i < payload.length - 1 ? 6 : 0,
+        }}>
+          <div style={{
+            width: 10, height: 3, borderRadius: 2,
+            background: p.color, flexShrink: 0,
+          }} />
+          <span style={{
+            color: "#6B7280", fontSize: 12,
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 500, minWidth: 90,
+          }}>
             {p.name}:
           </span>
-          <span
-            style={{
-              color: "#e0ecf8",
-              fontSize: 13,
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-            }}
-          >
+          <span style={{
+            color: "#111827", fontSize: 13,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700,
+          }}>
             {formatValue(p.value)}
           </span>
         </div>
@@ -118,37 +98,22 @@ const CustomLegend = ({
 }) => {
   if (!payload?.length) return null;
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "12px 20px",
-        justifyContent: "center",
-        paddingTop: 12,
-      }}
-    >
+    <div style={{
+      display: "flex", flexWrap: "wrap",
+      gap: "8px 20px", justifyContent: "center",
+      paddingTop: 12,
+    }}>
       {payload.map((entry, i) => (
-        <div
-          key={i}
-          style={{ display: "flex", alignItems: "center", gap: 6 }}
-        >
-          <div
-            style={{
-              width: 20,
-              height: 2,
-              background: entry.color,
-              borderRadius: 2,
-              boxShadow: `0 0 4px ${entry.color}`,
-            }}
-          />
-          <span
-            style={{
-              color: "#8fa3bc",
-              fontSize: 11,
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 500,
-            }}
-          >
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{
+            width: 20, height: 3,
+            background: entry.color, borderRadius: 2,
+          }} />
+          <span style={{
+            color: "#6B7280", fontSize: 12,
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 500,
+          }}>
             {entry.value}
           </span>
         </div>
@@ -169,42 +134,20 @@ export function UBGLineChart({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-        <defs>
-          {lines.map((line) => (
-            <filter key={`glow-${line.key}`} id={`glow-${line.key}`}>
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          ))}
-        </defs>
-        <CartesianGrid
-          strokeDasharray="3 3"
-          stroke="rgba(27,152,224,0.07)"
-        />
+        <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
         <XAxis
           dataKey={xKey}
-          tick={{
-            fontSize: 11,
-            fill: "#4d6680",
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 500,
-          }}
+          tick={{ fontSize: 11, fill: "#9CA3AF", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 500 }}
           axisLine={false}
           tickLine={false}
+          dy={6}
         />
         <YAxis
           tickFormatter={formatValue}
-          tick={{
-            fontSize: 10,
-            fill: "#3d5570",
-            fontFamily: "'Space Grotesk', sans-serif",
-          }}
+          tick={{ fontSize: 11, fill: "#9CA3AF", fontFamily: "'Inter', sans-serif" }}
           axisLine={false}
           tickLine={false}
-          width={60}
+          width={64}
         />
         <Tooltip content={<CustomTooltip formatValue={formatValue} />} />
         {showLegend && <Legend content={<CustomLegend />} />}
@@ -217,7 +160,7 @@ export function UBGLineChart({
             label={{
               value: referenceLine.label,
               position: "right",
-              fontSize: 10,
+              fontSize: 11,
               fill: referenceLine.color || "#1b98e0",
               fontWeight: 700,
               fontFamily: "'Space Grotesk', sans-serif",
@@ -235,18 +178,16 @@ export function UBGLineChart({
             strokeDasharray={line.dashed ? "6 3" : undefined}
             dot={{
               r: 4,
-              fill: line.color,
+              fill: "#ffffff",
               strokeWidth: 2,
-              stroke: "rgba(8,18,28,0.9)",
+              stroke: line.color,
             }}
             activeDot={{
               r: 6,
-              fill: line.color,
-              stroke: "rgba(8,18,28,0.9)",
-              strokeWidth: 2,
-              style: { filter: `drop-shadow(0 0 6px ${line.color})` },
+              fill: "#ffffff",
+              stroke: line.color,
+              strokeWidth: 2.5,
             }}
-            style={{ filter: `drop-shadow(0 0 3px ${line.color}60)` }}
           />
         ))}
       </LineChart>
