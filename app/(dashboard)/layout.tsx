@@ -42,13 +42,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Lado Esquerdo — Logo com Divisor Técnico */}
         <div className="flex h-full items-center gap-4">
           <Link href="/dashboard" className="flex items-center h-full pr-4 border-r border-white/10 transition-opacity hover:opacity-90">
-            <div className="relative p-1 rounded-md bg-white/5 border border-white/10">
+            <div className="relative px-2 py-1 rounded-md bg-white/95 border border-white/20">
               <Image
-                src="/logo-rjt-360.png"
+                src="/logo-rjt-nexus-360.png"
                 alt="RJT NEXUS 360°"
-                width={110}
-                height={32}
-                className="object-contain brightness-0 invert"
+                width={148}
+                height={40}
+                className="object-contain"
                 priority
               />
             </div>
