@@ -49,6 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 width={148}
                 height={40}
                 className="object-contain"
+                sizes="148px"
                 priority
               />
             </div>
