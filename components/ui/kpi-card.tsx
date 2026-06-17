@@ -43,18 +43,18 @@ export function KPICard({
       className={cn("relative overflow-hidden bg-white rounded-2xl transition-all duration-200", className)}
       style={{
         border: "1px solid #E5E7EB",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        boxShadow: "0 0 12px rgba(0,0,0,0.03)",
         padding: size === "lg" ? "28px 28px" : "22px 24px",
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)";
+        el.style.boxShadow = "0 8px 24px rgba(0,0,0,0.04), 0 0 16px rgba(27,152,224,0.1)";
         el.style.borderColor = "rgba(27,152,224,0.3)";
         el.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)";
+        el.style.boxShadow = "0 0 12px rgba(0,0,0,0.03)";
         el.style.borderColor = "#E5E7EB";
         el.style.transform = "translateY(0)";
       }}

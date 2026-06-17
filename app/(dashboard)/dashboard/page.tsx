@@ -46,11 +46,10 @@ const topVendedores = [
 
 export default function DashboardPage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="section-title mb-1">Visão Geral</div>
           <h1 className="page-title">Indicadores Gerenciais 2026</h1>
           <p className="text-sm text-slate-500 mt-1">
             Comercial: Janeiro–Maio · RH: Janeiro–Março · Dados da planilha mestra
@@ -69,7 +68,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Alert banner */}
-      <div className="bg-red-50 border border-red-200 border-l-4 border-l-red-500 p-4 flex items-start gap-3">
+      <div className="bg-red-50 border border-red-200 border-l-4 border-l-red-500 rounded-xl p-4 flex items-start gap-3 shadow-[0_0_12px_rgba(239,68,68,0.03)]">
         <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
         <div>
           <div className="text-sm font-bold text-red-800">
@@ -173,7 +172,7 @@ export default function DashboardPage() {
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Faturamento por mês */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-5">
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_0_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="section-title">Faturamento Mensal</div>
@@ -196,7 +195,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Empresas donut */}
-        <div className="bg-white border border-slate-200 p-5">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_0_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="section-title">Por Empresa</div>
@@ -216,7 +215,7 @@ export default function DashboardPage() {
       {/* Charts row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Turnover linha */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-5">
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_0_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="section-title">Turnover vs Meta</div>
@@ -245,7 +244,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Ranking vendedores */}
-        <div className="bg-white border border-slate-200 p-5">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_0_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:-translate-y-0.5">
           <div className="section-title mb-4">Ranking Vendedores</div>
           <div className="space-y-3">
             {topVendedores.map((v, i) => (
