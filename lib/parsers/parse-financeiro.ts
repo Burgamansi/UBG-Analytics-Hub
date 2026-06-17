@@ -147,21 +147,29 @@ function parseDreNovo(
   const nameRow = (matrix[1] ?? []) as unknown[];
 
   // Mapear coluna → índice de mês (1-12)
+  // Usar apenas a PRIMEIRA ocorrência de cada mês para evitar dupla contagem
+  // com o bloco secundário de colunas (% comparativas) presente na aba "DRE novo".
   const colMes: Record<number, number> = {};
 
   // Primeiro tentar pela linha de numerais (linha 1)
+  const seenMonths = new Set<number>();
   for (let c = 1; c < numeralRow.length; c++) {
     const v = numeralRow[c];
-    if (typeof v === "number" && v >= 1 && v <= 12) {
+    if (typeof v === "number" && v >= 1 && v <= 12 && !seenMonths.has(v)) {
       colMes[c] = v;
+      seenMonths.add(v);
     }
   }
 
-  // Fallback: usar nomes dos meses (linha 2)
+  // Fallback: usar nomes dos meses (linha 2) — mesma proteção contra duplicatas
   if (Object.keys(colMes).length === 0) {
+    const seenFallback = new Set<number>();
     for (let c = 1; c < nameRow.length; c++) {
       const mesIdx = MESES[norm(nameRow[c])];
-      if (mesIdx) colMes[c] = mesIdx;
+      if (mesIdx && !seenFallback.has(mesIdx)) {
+        colMes[c] = mesIdx;
+        seenFallback.add(mesIdx);
+      }
     }
   }
 

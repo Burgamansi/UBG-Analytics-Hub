@@ -1,53 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { KPICard } from "@/components/ui/kpi-card";
 import { UBGBarChart } from "@/components/charts/bar-chart";
 import { UBGDonutChart } from "@/components/charts/donut-chart";
 import { UBGLineChart } from "@/components/charts/line-chart";
 import { Users, AlertTriangle, TrendingDown, Clock } from "lucide-react";
-import { formatPercent, formatNumber } from "@/lib/utils";
+import { formatPercent, formatNumber, getMonthName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-
-const turnoverMeses = [
-  { label: "Jan", turnover: 10.4, absenteismo: 7.3, meta_t: 6, meta_a: 5 },
-  { label: "Fev", turnover: 12.0, absenteismo: 6.1, meta_t: 6, meta_a: 5 },
-  { label: "Mar", turnover: 19.2, absenteismo: 8.4, meta_t: 6, meta_a: 5 },
-];
-
-const desligPorEmpresa = [
-  { label: "Rafcorte", value: 20 },
-  { label: "LPL", value: 15 },
-  { label: "Lima", value: 7 },
-  { label: "OP", value: 3 },
-];
-
-const motivosDeslig = [
-  { name: "Não informado", value: 25 },
-  { name: "Melhor salário", value: 10 },
-  { name: "Produtividade", value: 5 },
-  { name: "Comportamento", value: 3 },
-  { name: "Outros", value: 2 },
-];
-
-const cids = [
-  { label: "Falta (n. justif.)", value: 34 },
-  { label: "Dores Musculares", value: 26 },
-  { label: "Consulta Médica", value: 13 },
-  { label: "Gripe/Resfriado", value: 8 },
-  { label: "Outros", value: 6 },
-];
-
-const desligamentos = [
-  { nome: "Colaborador 01", empresa: "Rafcorte", cargo: "Operador de Produção", motivo: "Melhor salário", mes: "Janeiro" },
-  { nome: "Colaborador 02", empresa: "LPL", cargo: "Auxiliar Logístico", motivo: "Não informado", mes: "Janeiro" },
-  { nome: "Colaborador 03", empresa: "Rafcorte", cargo: "Costureira", motivo: "Produtividade", mes: "Fevereiro" },
-  { nome: "Colaborador 04", empresa: "Lima", cargo: "Auxiliar Administrativo", motivo: "Não informado", mes: "Fevereiro" },
-  { nome: "Colaborador 05", empresa: "Rafcorte", cargo: "Operador de Máquina", motivo: "Comportamento", mes: "Março" },
-  { nome: "Colaborador 06", empresa: "LPL", cargo: "Motorista", motivo: "Melhor salário", mes: "Março" },
-  { nome: "Colaborador 07", empresa: "Rafcorte", cargo: "Costureira", motivo: "Não informado", mes: "Março" },
-  { nome: "Colaborador 08", empresa: "OP", cargo: "Auxiliar Geral", motivo: "Não informado", mes: "Março" },
-];
+import type { RHSummary } from "@/app/api/rh/route";
 
 const motivoCores: Record<string, string> = {
   "Melhor salário": "bg-amber-100 text-amber-700",
@@ -58,11 +19,51 @@ const motivoCores: Record<string, string> = {
 };
 
 const TABS = ["Visão Geral", "Turnover", "Absenteísmo", "Desligamentos"];
+const CARD = "bg-white border border-gray-200 shadow-[0_0_12px_rgba(0,0,0,0.03)] p-5";
+const META_TURNOVER = 6;
+const META_ABSENTEISMO = 5;
 
 export default function RHPage() {
   const [tab, setTab] = useState(0);
   const [busca, setBusca] = useState("");
   const [empresaFiltro, setEmpresaFiltro] = useState("Todas");
+  const [summary, setSummary] = useState<RHSummary | null>(null);
+
+  useEffect(() => {
+    fetch("/api/rh")
+      .then((r) => r.json())
+      .then((data) => { if (data.summary) setSummary(data.summary); })
+      .catch(() => {});
+  }, []);
+
+  if (!summary) {
+    return <div className="p-6 text-sm text-slate-400">Carregando...</div>;
+  }
+
+  const {
+    kpis,
+    turnoverMeses,
+    desligPorEmpresa,
+    motivosDeslig,
+    cids,
+    desligamentos,
+    empresas,
+    turnoversEmpresa,
+    mesesDisponiveis,
+  } = summary;
+
+  const piorMesTurnover =
+    turnoverMeses.length > 0
+      ? turnoverMeses.reduce((a, b) => (b.turnover > a.turnover ? b : a))
+      : null;
+  const multiplicador = piorMesTurnover
+    ? (piorMesTurnover.turnover / META_TURNOVER).toFixed(1)
+    : "?";
+  const piorEmpresa = desligPorEmpresa[0];
+  const pctPiorEmpresa =
+    piorEmpresa && kpis.totalDesligamentos > 0
+      ? Math.round((piorEmpresa.value / kpis.totalDesligamentos) * 100)
+      : 0;
 
   const desligFiltrados = desligamentos.filter((d) => {
     const matchBusca =
@@ -74,38 +75,52 @@ export default function RHPage() {
     return matchBusca && matchEmpresa;
   });
 
+  const piorMesAbs =
+    turnoverMeses.length > 0
+      ? turnoverMeses.reduce((a, b) => (b.absenteismo > a.absenteismo ? b : a))
+      : null;
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <div className="section-title mb-1">Módulo RH</div>
-        <h1 className="page-title">Dashboard de Recursos Humanos 2026</h1>
+        <h1 className="page-title">
+          Dashboard de Recursos Humanos {kpis.periodo.split(" ").pop()}
+        </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Turnover · Absenteísmo · Atestados · Desligamentos · Jan–Mar 2026
+          Turnover · Absenteísmo · Atestados · Desligamentos · {kpis.periodo}
         </p>
       </div>
 
       {/* Alert */}
-      <div className="bg-red-50 border border-red-200 border-l-4 border-l-red-500 p-4 flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <div className="text-sm font-bold text-red-800">
-            Turnover 3,2× acima da meta em Março — 19,2% vs meta 6%
-          </div>
-          <div className="text-xs text-red-600 mt-0.5">
-            45 desligamentos em 3 meses · Custo oculto estimado: R$ 135–225K ·
-            Rafcorte: 47% dos desligamentos
+      {piorMesTurnover && (
+        <div className="bg-red-50 border border-red-200 border-l-4 border-l-red-500 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-bold text-red-800">
+              Turnover {multiplicador}× acima da meta em{" "}
+              {getMonthName(piorMesTurnover.mes)} —{" "}
+              {formatPercent(piorMesTurnover.turnover)} vs meta{" "}
+              {formatPercent(META_TURNOVER)}
+            </div>
+            <div className="text-xs text-red-600 mt-0.5">
+              {kpis.totalDesligamentos} desligamentos · {kpis.periodo}
+              {piorEmpresa
+                ? ` · ${piorEmpresa.label}: ${pctPiorEmpresa}% dos desligamentos`
+                : ""}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Turnover Médio"
-          value="13,9%"
-          subtitle="Meta: 6% — +131% acima"
-          variation={131}
+          value={formatPercent(kpis.turnoverMedio)}
+          subtitle={`Meta: ${formatPercent(META_TURNOVER)} — +${Math.round((kpis.turnoverMedio / META_TURNOVER - 1) * 100)}% acima`}
+          variation={(kpis.turnoverMedio / META_TURNOVER - 1) * 100}
           icon={TrendingDown}
           accentColor="#EF4444"
           status="danger"
@@ -113,25 +128,29 @@ export default function RHPage() {
         />
         <KPICard
           title="Total Desligamentos"
-          value="45"
-          subtitle="Jan–Mar 2026"
+          value={String(kpis.totalDesligamentos)}
+          subtitle={kpis.periodo}
           icon={Users}
           accentColor="#EF4444"
           status="danger"
-          meta="Rafcorte: 20"
+          meta={piorEmpresa ? `${piorEmpresa.label}: ${piorEmpresa.value}` : undefined}
         />
         <KPICard
           title="Absenteísmo Médio"
-          value="7,3%"
-          subtitle="Meta: 5% — +46% acima"
+          value={formatPercent(kpis.absenteismoMedio)}
+          subtitle={`Meta: ${formatPercent(META_ABSENTEISMO)} — +${Math.round((kpis.absenteismoMedio / META_ABSENTEISMO - 1) * 100)}% acima`}
           icon={AlertTriangle}
           accentColor="#F59E0B"
           status="warning"
-          meta="Pico: 8,4% Mar"
+          meta={
+            piorMesAbs
+              ? `Pico: ${formatPercent(piorMesAbs.absenteismo)} ${piorMesAbs.label}`
+              : undefined
+          }
         />
         <KPICard
           title="Horas de Ausência"
-          value="2.657h"
+          value={`${formatNumber(kpis.horasAusencia)}h`}
           subtitle="Justificadas + Não justificadas"
           icon={Clock}
           accentColor="#F59E0B"
@@ -161,10 +180,10 @@ export default function RHPage() {
       {tab === 0 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Turnover e Absenteísmo vs Metas</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
-                Evolução mensal Jan–Mar 2026
+                Evolução mensal {kpis.periodo}
               </div>
               <UBGLineChart
                 data={turnoverMeses}
@@ -179,10 +198,10 @@ export default function RHPage() {
                 height={240}
               />
             </div>
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Desligamentos por Empresa</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
-                Jan–Mar 2026 — Total: 45
+                {kpis.periodo} — Total: {kpis.totalDesligamentos}
               </div>
               <UBGBarChart
                 data={desligPorEmpresa}
@@ -193,10 +212,12 @@ export default function RHPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Motivos de Desligamento</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
-                56% sem motivo registrado — falha no processo
+                {motivosDeslig[0]
+                  ? `${Math.round((motivosDeslig[0].value / kpis.totalDesligamentos) * 100)}% "${motivosDeslig[0].name}" — falha no processo`
+                  : "Distribuição de motivos"}
               </div>
               <UBGDonutChart
                 data={motivosDeslig}
@@ -204,7 +225,7 @@ export default function RHPage() {
                 height={220}
               />
             </div>
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Top CIDs — Dias de Afastamento</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
                 Dores musculares = risco ergonômico na produção
@@ -224,8 +245,10 @@ export default function RHPage() {
       {tab === 1 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-slate-200 p-5">
-              <div className="section-title mb-1">Evolução do Turnover vs Meta 6%</div>
+            <div className={CARD}>
+              <div className="section-title mb-1">
+                Evolução do Turnover vs Meta {formatPercent(META_TURNOVER)}
+              </div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
                 Tendência de alta preocupante
               </div>
@@ -233,18 +256,20 @@ export default function RHPage() {
                 data={turnoverMeses}
                 lines={[
                   { key: "turnover", label: "Turnover %", color: "#EF4444" },
-                  { key: "meta_t", label: "Meta 6%", color: "#10B981", dashed: true },
+                  { key: "meta_t", label: `Meta ${formatPercent(META_TURNOVER)}`, color: "#10B981", dashed: true },
                 ]}
                 xKey="label"
                 formatValue={(v) => formatPercent(v)}
                 height={240}
-                referenceLine={{ value: 6, label: "Meta 6%", color: "#10B981" }}
+                referenceLine={{ value: META_TURNOVER, label: `Meta ${formatPercent(META_TURNOVER)}`, color: "#10B981" }}
               />
             </div>
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Participação por Empresa</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
-                Rafcorte: 47% dos desligamentos
+                {piorEmpresa
+                  ? `${piorEmpresa.label}: ${pctPiorEmpresa}% dos desligamentos`
+                  : "Distribuição por empresa"}
               </div>
               <UBGDonutChart
                 data={desligPorEmpresa.map((d) => ({ name: d.label, value: d.value }))}
@@ -253,42 +278,57 @@ export default function RHPage() {
               />
             </div>
           </div>
-          {/* Tabela mensal */}
-          <div className="bg-white border border-slate-200 p-5">
-            <div className="section-title mb-4">Turnover Mensal por Empresa</div>
+          {/* Tabela dinâmica por empresa/mês */}
+          <div className={CARD.replace(" p-5", "")}>
+            <div className="p-5 pb-0">
+              <div className="section-title mb-4">Turnover Mensal por Empresa</div>
+            </div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="table-header">
                   <th className="text-left p-3">Empresa</th>
-                  <th className="text-center p-3">Janeiro</th>
-                  <th className="text-center p-3">Fevereiro</th>
-                  <th className="text-center p-3">Março</th>
+                  {mesesDisponiveis.map((m) => (
+                    <th key={m.mes} className="text-center p-3">{m.label}</th>
+                  ))}
                   <th className="text-center p-3">Média</th>
                   <th className="text-center p-3">Meta</th>
                   <th className="text-center p-3">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { empresa: "Rafcorte", jan: 14.2, fev: 18.5, mar: 28.6, meta: 6 },
-                  { empresa: "LPL", jan: 12.1, fev: 14.8, mar: 22.4, meta: 6 },
-                  { empresa: "Lima", jan: 7.8, fev: 8.2, mar: 11.4, meta: 6 },
-                  { empresa: "OP", jan: 5.2, fev: 6.1, mar: 9.8, meta: 6 },
-                ].map((r) => {
-                  const media = ((r.jan + r.fev + r.mar) / 3);
-                  const acima = media > r.meta;
+                {turnoversEmpresa.map((r) => {
+                  const acima = r.media > r.meta;
+                  const vals = mesesDisponiveis.map((m) => r.porMes[m.mes] ?? 0);
+                  const ultimoVal = vals[vals.length - 1] ?? 0;
                   return (
                     <tr key={r.empresa} className="border-b border-slate-100 table-row-hover">
                       <td className="p-3 font-semibold text-slate-800">{r.empresa}</td>
-                      <td className="p-3 text-center">{formatPercent(r.jan)}</td>
-                      <td className="p-3 text-center">{formatPercent(r.fev)}</td>
-                      <td className={cn("p-3 text-center font-bold", r.mar > 20 ? "text-red-600" : "text-amber-600")}>
-                        {formatPercent(r.mar)}
+                      {vals.map((val, i) => (
+                        <td
+                          key={i}
+                          className={cn(
+                            "p-3 text-center",
+                            i === vals.length - 1 && ultimoVal > 20
+                              ? "font-bold text-red-600"
+                              : i === vals.length - 1
+                              ? "font-bold text-amber-600"
+                              : ""
+                          )}
+                        >
+                          {formatPercent(val)}
+                        </td>
+                      ))}
+                      <td
+                        className={cn(
+                          "p-3 text-center font-bold",
+                          acima ? "text-red-600" : "text-emerald-600"
+                        )}
+                      >
+                        {formatPercent(r.media)}
                       </td>
-                      <td className={cn("p-3 text-center font-bold", acima ? "text-red-600" : "text-emerald-600")}>
-                        {formatPercent(media)}
+                      <td className="p-3 text-center text-slate-400">
+                        {formatPercent(r.meta)}
                       </td>
-                      <td className="p-3 text-center text-slate-400">{formatPercent(r.meta)}</td>
                       <td className="p-3 text-center">
                         <span className={cn("badge", acima ? "badge-danger" : "badge-success")}>
                           {acima ? "Acima" : "OK"}
@@ -307,24 +347,28 @@ export default function RHPage() {
       {tab === 2 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-slate-200 p-5">
-              <div className="section-title mb-1">Absenteísmo % vs Meta 5%</div>
+            <div className={CARD}>
+              <div className="section-title mb-1">
+                Absenteísmo % vs Meta {formatPercent(META_ABSENTEISMO)}
+              </div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
-                Pico em Março: 8,4% (+68% acima da meta)
+                {piorMesAbs
+                  ? `Pico em ${getMonthName(piorMesAbs.mes)}: ${formatPercent(piorMesAbs.absenteismo)} (+${Math.round((piorMesAbs.absenteismo / META_ABSENTEISMO - 1) * 100)}% acima da meta)`
+                  : "Evolução do absenteísmo"}
               </div>
               <UBGLineChart
                 data={turnoverMeses}
                 lines={[
                   { key: "absenteismo", label: "Absenteísmo %", color: "#F59E0B" },
-                  { key: "meta_a", label: "Meta 5%", color: "#10B981", dashed: true },
+                  { key: "meta_a", label: `Meta ${formatPercent(META_ABSENTEISMO)}`, color: "#10B981", dashed: true },
                 ]}
                 xKey="label"
                 formatValue={(v) => formatPercent(v)}
                 height={240}
-                referenceLine={{ value: 5, label: "Meta 5%", color: "#10B981" }}
+                referenceLine={{ value: META_ABSENTEISMO, label: `Meta ${formatPercent(META_ABSENTEISMO)}`, color: "#10B981" }}
               />
             </div>
-            <div className="bg-white border border-slate-200 p-5">
+            <div className={CARD}>
               <div className="section-title mb-1">Top CIDs — Dias Afastados</div>
               <div className="text-sm font-semibold text-slate-700 mb-4">
                 Dores musculares = 2º maior CID (risco ergonômico)
@@ -337,36 +381,46 @@ export default function RHPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Janeiro", pct: 7.3, hj: 768, hnj: 150, status: "warning" },
-              { label: "Fevereiro", pct: 6.1, hj: 724, hnj: 180, status: "warning" },
-              { label: "Março ⚠", pct: 8.4, hj: 655, hnj: 180, status: "danger" },
-            ].map((m) => (
-              <div
-                key={m.label}
-                className={cn(
-                  "bg-white border border-slate-200 p-5",
-                  m.status === "danger" ? "border-t-4 border-t-red-500" : "border-t-4 border-t-amber-400"
-                )}
-              >
-                <div className="text-sm font-bold text-slate-700 mb-3">{m.label}</div>
-                <div className={cn("text-3xl font-black", m.status === "danger" ? "text-red-600" : "text-amber-600")}>
-                  {formatPercent(m.pct)}
-                </div>
-                <div className="text-xs text-slate-400 mb-3">Meta: 5%</div>
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">H. Justificadas:</span>
-                    <span className="font-semibold">{m.hj}h</span>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {turnoverMeses.map((m) => {
+              const status = m.absenteismo > 7 ? "danger" : "warning";
+              return (
+                <div
+                  key={m.mes}
+                  className={cn(
+                    "bg-white border border-gray-200 shadow-[0_0_12px_rgba(0,0,0,0.03)] p-5",
+                    status === "danger"
+                      ? "border-t-4 border-t-red-500"
+                      : "border-t-4 border-t-amber-400"
+                  )}
+                >
+                  <div className="text-sm font-bold text-slate-700 mb-3">
+                    {getMonthName(m.mes)}{status === "danger" ? " ⚠" : ""}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">H. Não Justif.:</span>
-                    <span className="font-semibold text-red-600">{m.hnj}h</span>
+                  <div
+                    className={cn(
+                      "text-3xl font-black",
+                      status === "danger" ? "text-red-600" : "text-amber-600"
+                    )}
+                  >
+                    {formatPercent(m.absenteismo)}
+                  </div>
+                  <div className="text-xs text-slate-400 mb-3">
+                    Meta: {formatPercent(META_ABSENTEISMO)}
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">H. Justificadas:</span>
+                      <span className="font-semibold">{formatNumber(m.hj)}h</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">H. Não Justif.:</span>
+                      <span className="font-semibold text-red-600">{formatNumber(m.hnj)}h</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -387,7 +441,7 @@ export default function RHPage() {
               onChange={(e) => setEmpresaFiltro(e.target.value)}
               className="border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-brand-cyan"
             >
-              {["Todas", "Rafcorte", "LPL", "Lima", "OP"].map((e) => (
+              {["Todas", ...empresas].map((e) => (
                 <option key={e}>{e}</option>
               ))}
             </select>
@@ -395,7 +449,7 @@ export default function RHPage() {
               {desligFiltrados.length} de {desligamentos.length} registros
             </span>
           </div>
-          <div className="bg-white border border-slate-200 overflow-hidden">
+          <div className="bg-white border border-gray-200 shadow-[0_0_12px_rgba(0,0,0,0.03)] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="table-header">

@@ -105,13 +105,87 @@ export async function POST(request: NextRequest) {
         }
       }
     } else if (modulo === "rh" || modulo === "turnover") {
-      const { rh, desligamentos, errors } = parseRHXLS(buffer);
+      const { rh: rhRows, desligamentos: desligRows, errors } = parseRHXLS(buffer);
       result = {
         modulo,
-        registros: rh.length + desligamentos.length,
+        registros: rhRows.length + desligRows.length,
         erros: errors,
-        preview: [...rh.slice(0, 3), ...desligamentos.slice(0, 3)],
+        preview: [...rhRows.slice(0, 3), ...desligRows.slice(0, 3)],
       };
+
+      if (process.env.DATABASE_URL && (rhRows.length > 0 || desligRows.length > 0)) {
+        try {
+          const {
+            db,
+            uploads,
+            registros_rh,
+            desligamentos: desligamentos_table,
+          } = await import("@/lib/db");
+          const { eq } = await import("drizzle-orm");
+
+          const [upload] = await db
+            .insert(uploads)
+            .values({
+              nome_arquivo: file.name,
+              modulo: modulo === "turnover" ? "turnover" : "rh",
+              status: "processando",
+            })
+            .returning();
+
+          if (rhRows.length > 0) {
+            const chunks = [];
+            for (let i = 0; i < rhRows.length; i += 500) chunks.push(rhRows.slice(i, i + 500));
+            for (const chunk of chunks) {
+              await db.insert(registros_rh).values(
+                chunk.map((r) => ({
+                  upload_id: upload.id,
+                  mes: r.mes,
+                  ano: r.ano,
+                  empresa: r.empresa,
+                  colaboradores_inicio: r.colaboradores_inicio,
+                  colaboradores_fim: r.colaboradores_fim,
+                  admissoes: r.admissoes,
+                  desligamentos: r.desligamentos,
+                  turnover_pct: String(r.turnover_pct),
+                  absenteismo_pct: String(r.absenteismo_pct),
+                  horas_justificadas: String(r.horas_justificadas),
+                  horas_nao_justificadas: String(r.horas_nao_justificadas),
+                }))
+              );
+            }
+          }
+
+          if (desligRows.length > 0) {
+            const chunks = [];
+            for (let i = 0; i < desligRows.length; i += 500) chunks.push(desligRows.slice(i, i + 500));
+            for (const chunk of chunks) {
+              await db.insert(desligamentos_table).values(
+                chunk.map((d) => ({
+                  upload_id: upload.id,
+                  mes: d.mes,
+                  ano: d.ano,
+                  empresa: d.empresa,
+                  nome: d.nome,
+                  cargo: d.cargo,
+                  motivo: d.motivo,
+                  data_admissao: d.data_admissao,
+                  data_desligamento: d.data_desligamento,
+                }))
+              );
+            }
+          }
+
+          await db
+            .update(uploads)
+            .set({
+              status: "sucesso",
+              registros_importados: rhRows.length + desligRows.length,
+            })
+            .where(eq(uploads.id, upload.id));
+        } catch (dbErr) {
+          console.error("DB error:", dbErr);
+        }
+      }
     } else if (modulo === "atestados") {
       const { atestados, errors } = parseAtestadosXLS(buffer);
       result = {
