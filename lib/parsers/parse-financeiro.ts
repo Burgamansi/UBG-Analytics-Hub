@@ -154,25 +154,61 @@ function parseDreNovo(
   // com o bloco secundário de colunas (% comparativas) presente na aba "DRE novo".
   const colMes: Record<number, number> = {};
 
-  // Primeiro tentar pela linha de numerais (linha 1)
   const seenMonths = new Set<number>();
-  for (let c = 1; c < numeralRow.length; c++) {
-    const v = numeralRow[c];
-    if (typeof v === "number" && v >= 1 && v <= 12 && !seenMonths.has(v)) {
-      colMes[c] = v;
-      seenMonths.add(v);
-    }
-  }
+  const maxCols = Math.max(numeralRow.length, nameRow.length);
 
-  // Fallback: usar nomes dos meses (linha 2) — mesma proteção contra duplicatas
-  if (Object.keys(colMes).length === 0) {
-    const seenFallback = new Set<number>();
-    for (let c = 1; c < nameRow.length; c++) {
-      const mesIdx = MESES[norm(nameRow[c])];
-      if (mesIdx && !seenFallback.has(mesIdx)) {
-        colMes[c] = mesIdx;
-        seenFallback.add(mesIdx);
+  for (let c = 1; c < maxCols; c++) {
+    const numVal = numeralRow[c];
+    const nameVal = nameRow[c];
+    let mesIdx: number | null = null;
+
+    // 1. Tentar ler número de numeralRow
+    if (numVal !== null && numVal !== undefined && numVal !== "") {
+      const n = typeof numVal === "number" ? numVal : parseInt(String(numVal).trim(), 10);
+      if (!isNaN(n) && n >= 1 && n <= 12) {
+        mesIdx = n;
       }
+    }
+
+    // 2. Se não conseguiu, tentar pelo nome em nameRow
+    if (mesIdx === null && nameVal !== null && nameVal !== undefined && nameVal !== "") {
+      const normalizedName = norm(nameVal);
+      // Tentar match por substring na tabela MESES (ex: "maio/26" contém "maio" ou "mai")
+      for (const [key, valNum] of Object.entries(MESES)) {
+        if (normalizedName.includes(key)) {
+          mesIdx = valNum;
+          break;
+        }
+      }
+      // Se não encontrou nome por extenso, tentar ver se há um número no nome (ex: "05/2026")
+      if (mesIdx === null) {
+        const parts = normalizedName.split(/[\/\-\s]+/);
+        for (const p of parts) {
+          const n = parseInt(p, 10);
+          if (!isNaN(n) && n >= 1 && n <= 12) {
+            mesIdx = n;
+            break;
+          }
+        }
+      }
+    }
+
+    // 3. Se ainda não, tentar ver se numeralRow tem alguma string de mês (ex: "maio")
+    if (mesIdx === null && numVal !== null && numVal !== undefined && numVal !== "") {
+      const normalizedNum = norm(numVal);
+      for (const [key, valNum] of Object.entries(MESES)) {
+        if (normalizedNum.includes(key)) {
+          mesIdx = valNum;
+          break;
+        }
+      }
+    }
+
+    // Registrar apenas a primeira coluna encontrada para cada mês (1-12)
+    // para evitar dupla contagem com colunas secundárias de porcentagem
+    if (mesIdx !== null && !seenMonths.has(mesIdx)) {
+      colMes[c] = mesIdx;
+      seenMonths.add(mesIdx);
     }
   }
 
