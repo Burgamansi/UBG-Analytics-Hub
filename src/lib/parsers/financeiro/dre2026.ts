@@ -1,4 +1,7 @@
 import { ExcelDataImportService } from "../core/DataImportService";
+import officeCrypto from "officecrypto-tool";
+
+const DEFAULT_DRE_PASSWORD = "DRE2025";
 import type { ColumnDefinition, ParsedWorksheetRow } from "../core/types";
 import { detectMonth, detectYear, findColumn, normalizeText, toNumber } from "../core/excel";
 
@@ -46,6 +49,27 @@ export class DRE2026ImportService extends ExcelDataImportService<DRE2026Record, 
   protected module = "financeiro" as const;
   protected parser = "financeiro/dre2026";
   protected columns = DRE_COLUMNS;
+
+  async readExcel(buffer: Buffer): Promise<ParsedWorksheetRow[]> {
+    let activeBuffer = buffer;
+    try {
+      return await super.readExcel(activeBuffer);
+    } catch (err) {
+      console.log("[financeiro/dre2026] Falha na leitura normal. Tentando descriptografia automática...");
+      try {
+        if (officeCrypto.isEncrypted(buffer)) {
+          const decrypted = await officeCrypto.decrypt(buffer, { password: DEFAULT_DRE_PASSWORD });
+          activeBuffer = decrypted;
+          return await super.readExcel(activeBuffer);
+        } else {
+          throw err;
+        }
+      } catch (decryptErr) {
+        console.error("[financeiro/dre2026] Erro ao descriptografar:", decryptErr);
+        throw new Error("Erro ao abrir planilha protegida por senha. Não foi possível descriptografar com a senha padrão DRE2025.");
+      }
+    }
+  }
 
   normalizeData(rows: ParsedWorksheetRow[]): DRE2026Record[] {
     return rows

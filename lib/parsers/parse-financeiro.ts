@@ -1,4 +1,7 @@
 import * as XLSX from "xlsx";
+import officeCrypto from "officecrypto-tool";
+
+const DEFAULT_DRE_PASSWORD = "DRE2025";
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -410,7 +413,7 @@ export function buildFinanceiroSummary(rows: ParsedFinanceiroRow[]) {
 
 export async function parseFinanceiroXLS(
   buffer: Buffer,
-  _password = "DRE2025"
+  _password = DEFAULT_DRE_PASSWORD
 ): Promise<{
   rows: ParsedFinanceiroRow[];
   summary: FinanceiroSummary;
@@ -423,8 +426,19 @@ export async function parseFinanceiroXLS(
   try {
     workbook = XLSX.read(buffer, { type: "buffer" });
   } catch (err) {
-    errors.push(`Erro ao abrir o arquivo: ${String(err)}`);
-    return { rows, summary: buildFinanceiroSummary([]), errors };
+    console.log("[financeiro] Falha na leitura normal. Tentando descriptografia automática...");
+    try {
+      if (officeCrypto.isEncrypted(buffer)) {
+        const decrypted = await officeCrypto.decrypt(buffer, { password: _password });
+        workbook = XLSX.read(decrypted, { type: "buffer" });
+        buffer = decrypted;
+      } else {
+        throw err;
+      }
+    } catch (decryptErr) {
+      errors.push(`Erro ao abrir planilha protegida: senha incorreta (${_password}) ou arquivo corrompido.`);
+      return { rows, summary: buildFinanceiroSummary([]), errors };
+    }
   }
 
   const sheetNames = workbook.SheetNames;

@@ -64,14 +64,14 @@ export async function POST(request: NextRequest) {
         try {
           const { db, uploads: uploadsRaw, registros_comercial } = await import("@/lib/db");
           const uploads = uploadsRaw as any;
-          const [upload] = await db
+          const [upload] = (await db
             .insert(uploads)
             .values({
               nome_arquivo: file.name,
               modulo: "comercial",
               status: "processando",
             })
-            .returning();
+            .returning()) as any;
 
           const chunks = [];
           for (let i = 0; i < rows.length; i += 500) {
@@ -125,14 +125,14 @@ export async function POST(request: NextRequest) {
           const uploads = uploadsRaw as any;
           const { eq } = await import("drizzle-orm");
 
-          const [upload] = await db
+          const [upload] = (await db
             .insert(uploads)
             .values({
               nome_arquivo: file.name,
               modulo: modulo === "turnover" ? "turnover" : "rh",
               status: "processando",
             })
-            .returning();
+            .returning()) as any;
 
           if (rhRows.length > 0) {
             const chunks = [];
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
 
           const { eq } = await import("drizzle-orm");
 
-          const [upload] = await db
+          const [upload] = (await db
             .insert(uploads)
             .values({
               nome_arquivo: file.name,
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
               status: "processando",
               ano_referencia: summary.ano_referencia,
             })
-            .returning();
+            .returning()) as any;
 
           // Salvar registros legados (compatibilidade)
           if (rows.length > 0) {
