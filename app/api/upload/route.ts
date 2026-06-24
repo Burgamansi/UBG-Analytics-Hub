@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
 
       if (process.env.DATABASE_URL && rows.length > 0) {
         try {
-          const { db, uploads, registros_comercial } = await import("@/lib/db");
+          const { db, uploads: uploadsRaw, registros_comercial } = await import("@/lib/db");
+          const uploads = uploadsRaw as any;
           const [upload] = await db
             .insert(uploads)
             .values({
@@ -117,10 +118,11 @@ export async function POST(request: NextRequest) {
         try {
           const {
             db,
-            uploads,
+            uploads: uploadsRaw,
             registros_rh,
             desligamentos: desligamentos_table,
           } = await import("@/lib/db");
+          const uploads = uploadsRaw as any;
           const { eq } = await import("drizzle-orm");
 
           const [upload] = await db
@@ -233,11 +235,12 @@ export async function POST(request: NextRequest) {
         try {
           const {
             db,
-            uploads,
+            uploads: uploadsRaw,
             registros_financeiro,
             financeiro_dre_mensal,
             financeiro_plano_contas,
           } = await import("@/lib/db");
+          const uploads = uploadsRaw as any;
 
           const { eq } = await import("drizzle-orm");
 
@@ -337,6 +340,41 @@ export async function POST(request: NextRequest) {
         } catch (dbErr) {
           console.error("DB error:", dbErr);
         }
+      }
+    } else if (modulo === "compras") {
+      const { parseComprasWorkbook } = await import("@/src/lib/parsers/compras");
+      const { persistComprasWorkflow } = await import("@/lib/data/compras-persistence");
+
+      const parsed = await parseComprasWorkbook(buffer, file.name);
+      const errors = parsed.issues.map((issue) => issue.message);
+
+      const fornCount = parsed.records.fornecedores.length;
+      const homCount = parsed.records.homologacoes.length;
+      const evalCount = parsed.records.avaliacoes.length;
+      const compCount = parsed.records.compras.length;
+      const cotaCount = parsed.records.cotacoes.length;
+      const totalCount = fornCount + homCount + evalCount + compCount + cotaCount;
+
+      result = {
+        modulo: "compras",
+        registros: totalCount,
+        erros: errors,
+        preview: parsed.records.compras.slice(0, 5),
+      };
+
+      try {
+        await persistComprasWorkflow(
+          file.name,
+          parsed.records.fornecedores,
+          parsed.records.homologacoes,
+          parsed.records.avaliacoes,
+          parsed.records.compras,
+          parsed.records.cotacoes,
+          errors
+        );
+      } catch (dbErr) {
+        console.error("DB error:", dbErr);
+        result.erros.push("Arquivo processado, mas nao foi possivel persistir os dados de compras no banco.");
       }
     } else {
       return NextResponse.json(

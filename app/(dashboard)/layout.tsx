@@ -12,6 +12,7 @@ import {
   Bell,
   ChevronDown,
   Activity,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Comercial",   href: "/comercial", icon: TrendingUp,      badge: "Jan–Mai",  badgeType: "info" },
   { label: "RH",          href: "/rh",         icon: Users,           badge: "Crítico",  badgeType: "danger" },
   { label: "Financeiro",  href: "/financeiro", icon: BarChart3 },
+  { label: "Compras",     href: "/compras",     icon: ShoppingCart },
   { label: "Upload",      href: "/upload",     icon: Upload },
 ];
 

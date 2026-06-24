@@ -49,3 +49,6 @@ drizzle/
 .idea/
 *.swp
 *.swo
+
+# Claude CLI
+.claude/

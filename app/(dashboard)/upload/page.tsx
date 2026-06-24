@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Modulo = "comercial" | "rh" | "turnover" | "atestados" | "financeiro";
+type Modulo = "comercial" | "rh" | "turnover" | "atestados" | "financeiro" | "compras";
 
 interface UploadResult {
   success: boolean;
@@ -62,6 +62,13 @@ const MODULOS: Array<{
     descricao: "Controle de atestados médicos e CIDs",
     planilha: "CONTROLEDEATESTADOS-2026.xlsx",
     color: "#8B5CF6",
+  },
+  {
+    id: "compras",
+    label: "Compras",
+    descricao: "Controle de fornecedores, homologações e pedidos de compras",
+    planilha: "IndicadoresCompras2026.xlsx",
+    color: "#3B82F6",
   },
   {
     id: "financeiro",

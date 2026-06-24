@@ -18,6 +18,9 @@ export const moduloEnum = pgEnum("modulo", [
   "turnover",
   "atestados",
   "financeiro",
+  "compras",
+  "qualidade",
+  "operacoes",
 ]);
 
 export const uploadStatusEnum = pgEnum("upload_status", [
@@ -38,9 +41,83 @@ export const uploads = pgTable("uploads", {
   modulo: moduloEnum("modulo").notNull(),
   mes_referencia: integer("mes_referencia"),
   ano_referencia: integer("ano_referencia"),
+  tipo_documento: varchar("tipo_documento", { length: 80 }),
+  parser: varchar("parser", { length: 120 }),
+  parser_version: varchar("parser_version", { length: 40 }),
+  usuario_importacao: varchar("usuario_importacao", { length: 160 }),
   status: uploadStatusEnum("status").default("processando").notNull(),
   registros_importados: integer("registros_importados"),
+  quantidade_registros: integer("quantidade_registros"),
+  quantidade_erros: integer("quantidade_erros").default(0),
   erro_mensagem: text("erro_mensagem"),
+  data_importacao: timestamp("data_importacao").defaultNow(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const importacao_logs = pgTable("importacao_logs", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  evento: varchar("evento", { length: 40 }).notNull(),
+  mensagem: text("mensagem").notNull(),
+  motivo_falha: text("motivo_falha"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Compras ──────────────────────────────────────────────────────────────────
+
+export const fornecedores = pgTable("fornecedores", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  cnpj: varchar("cnpj", { length: 20 }),
+  nome: varchar("nome", { length: 200 }).notNull(),
+  status: varchar("status", { length: 50 }).default("pendente").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const homologacoes = pgTable("homologacoes", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  fornecedor_id: integer("fornecedor_id").references(() => fornecedores.id),
+  data_homologacao: varchar("data_homologacao", { length: 50 }),
+  status: varchar("status", { length: 50 }).default("pendente").notNull(),
+  responsavel: varchar("responsavel", { length: 100 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const avaliacoes_fornecedor = pgTable("avaliacoes_fornecedor", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  fornecedor_id: integer("fornecedor_id").references(() => fornecedores.id),
+  nota_desempenho: numeric("nota_desempenho", { precision: 5, scale: 2 }).notNull(),
+  data_avaliacao: varchar("data_avaliacao", { length: 50 }),
+  status: varchar("status", { length: 50 }).default("pendente").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const compras = pgTable("compras", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  numero_pedido: varchar("numero_pedido", { length: 100 }).notNull(),
+  fornecedor_id: integer("fornecedor_id").references(() => fornecedores.id),
+  fornecedor_nome: varchar("fornecedor_nome", { length: 200 }),
+  data_compra: varchar("data_compra", { length: 50 }),
+  mes: integer("mes").notNull(),
+  ano: integer("ano").notNull(),
+  valor_total: numeric("valor_total", { precision: 15, scale: 2 }).notNull(),
+  economia_obtida: numeric("economia_obtida", { precision: 15, scale: 2 }),
+  lead_time_dias: integer("lead_time_dias"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const cotacoes = pgTable("cotacoes", {
+  id: serial("id").primaryKey(),
+  upload_id: integer("upload_id").references(() => uploads.id),
+  numero_cotacao: varchar("numero_cotacao", { length: 100 }).notNull(),
+  data_cotacao: varchar("data_cotacao", { length: 50 }),
+  item: varchar("item", { length: 200 }).notNull(),
+  quantidade: numeric("quantidade", { precision: 12, scale: 2 }),
+  valor_cotado: numeric("valor_cotado", { precision: 15, scale: 2 }),
+  vencedora: varchar("vencedora", { length: 10 }).default("nao").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
