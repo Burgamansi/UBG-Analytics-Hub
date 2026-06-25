@@ -6,18 +6,6 @@ import { parseFinanceiroXLS } from "@/lib/parsers/parse-financeiro";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function isMissingGovernanceColumnError(error: unknown): boolean {
-  const message = String(error).toLowerCase();
-  return [
-    "tipo_documento",
-    "parser",
-    "parser_version",
-    "usuario_importacao",
-    "quantidade_registros",
-    "quantidade_erros",
-    "data_importacao",
-  ].some((column) => message.includes(column));
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -246,124 +234,106 @@ export async function POST(request: NextRequest) {
 
       if (process.env.DATABASE_URL) {
         try {
-          const {
-            db,
-            uploads: uploadsRaw,
-            registros_financeiro,
-            financeiro_dre_mensal,
-            financeiro_plano_contas,
-          } = await import("@/lib/db");
-          const uploads = uploadsRaw as any;
+          const { neon } = await import("@neondatabase/serverless");
+          const sql = neon(process.env.DATABASE_URL);
 
-          const { eq } = await import("drizzle-orm");
+          const uploadsInserted = await sql`
+            insert into uploads (nome_arquivo, modulo, status, ano_referencia)
+            values (${file.name}, 'financeiro', 'processando', ${summary.ano_referencia})
+            returning id
+          `;
+          const upload = uploadsInserted[0] as { id: number };
 
-          let upload: any;
-          try {
-            [upload] = (await db
-              .insert(uploads)
-              .values({
-                nome_arquivo: file.name,
-                modulo: "financeiro",
-                status: "processando",
-                ano_referencia: summary.ano_referencia,
-              })
-              .returning()) as any;
-          } catch (insertErr) {
-            if (!isMissingGovernanceColumnError(insertErr)) throw insertErr;
-
-            const { neon } = await import("@neondatabase/serverless");
-            const sql = neon(process.env.DATABASE_URL);
-            const legacyUploads = await sql`
-              insert into uploads (nome_arquivo, modulo, status, ano_referencia)
-              values (${file.name}, 'financeiro', 'processando', ${summary.ano_referencia})
-              returning id, nome_arquivo, modulo, status, ano_referencia, created_at
+          for (const row of rows) {
+            await sql`
+              insert into registros_financeiro (upload_id, mes, ano, categoria, tipo, valor, descricao)
+              values (
+                ${upload.id},
+                ${row.mes},
+                ${row.ano},
+                ${row.categoria},
+                ${row.tipo},
+                ${String(row.valor)},
+                ${row.descricao}
+              )
             `;
-            upload = legacyUploads[0];
           }
 
-          // Salvar registros legados (compatibilidade)
-          if (rows.length > 0) {
-            const chunks = [];
-            for (let i = 0; i < rows.length; i += 500) {
-              chunks.push(rows.slice(i, i + 500));
-            }
-            for (const chunk of chunks) {
-              await db.insert(registros_financeiro).values(
-                chunk.map((r) => ({
-                  upload_id: upload.id,
-                  mes: r.mes,
-                  ano: r.ano,
-                  categoria: r.categoria,
-                  tipo: r.tipo,
-                  valor: String(r.valor),
-                  descricao: r.descricao,
-                }))
-              );
-            }
+          await sql`delete from financeiro_dre_mensal where ano = ${summary.ano_referencia}`;
+
+          for (const ev of summary.evolucao_mensal) {
+            await sql`
+              insert into financeiro_dre_mensal (
+                upload_id,
+                mes,
+                ano,
+                faturamento,
+                despesas_vendas,
+                tributos_vendas,
+                receita_liquida,
+                cmv,
+                adm,
+                tributos,
+                ebitda,
+                resultado_financeiro,
+                aplicacoes,
+                emprestimos,
+                resultado_liquido,
+                retirada_socios
+              )
+              values (
+                ${upload.id},
+                ${ev.mes},
+                ${ev.ano},
+                ${String(ev.receita)},
+                ${String(ev.despesas_vendas)},
+                ${String(ev.tributos_vendas)},
+                ${String(ev.receita_liquida)},
+                ${String(ev.custos)},
+                ${String(ev.despesas)},
+                '0',
+                ${String(ev.ebitda)},
+                ${String(ev.resultado_financeiro)},
+                ${String(ev.aplicacoes)},
+                ${String(ev.emprestimos)},
+                ${String(ev.resultado)},
+                ${String(summary.retirada_socios)}
+              )
+            `;
           }
 
-          // Salvar DRE mensal consolidado (nova tabela)
-          if (summary.evolucao_mensal.length > 0) {
-            // Limpar dados anteriores do mesmo ano
-            await db
-              .delete(financeiro_dre_mensal)
-              .where(eq(financeiro_dre_mensal.ano, summary.ano_referencia));
+          await sql`delete from financeiro_plano_contas where ano = ${summary.ano_referencia}`;
 
-            await db.insert(financeiro_dre_mensal).values(
-              summary.evolucao_mensal.map((ev) => ({
-                upload_id: upload.id,
-                mes: ev.mes,
-                ano: ev.ano,
-                faturamento: String(ev.receita),
-                despesas_vendas: String(ev.despesas_vendas),
-                tributos_vendas: String(ev.tributos_vendas),
-                receita_liquida: String(ev.receita_liquida),
-                cmv: String(ev.custos),
-                adm: String(ev.despesas),
-                tributos: "0",
-                ebitda: String(ev.ebitda),
-                resultado_financeiro: String(ev.resultado_financeiro),
-                aplicacoes: String(ev.aplicacoes),
-                emprestimos: String(ev.emprestimos),
-                resultado_liquido: String(ev.resultado),
-                retirada_socios: "0",
-              }))
-            );
+          for (const account of summary.plano_contas) {
+            await sql`
+              insert into financeiro_plano_contas (
+                upload_id,
+                ano,
+                codigo,
+                descricao,
+                tipo,
+                orcado,
+                realizado,
+                diferenca
+              )
+              values (
+                ${upload.id},
+                ${summary.ano_referencia},
+                ${account.codigo},
+                ${account.descricao},
+                ${account.tipo},
+                ${String(account.orcado)},
+                ${String(account.realizado)},
+                ${String(account.diferenca)}
+              )
+            `;
           }
 
-          // Salvar plano de contas
-          if (summary.plano_contas.length > 0) {
-            await db
-              .delete(financeiro_plano_contas)
-              .where(eq(financeiro_plano_contas.ano, summary.ano_referencia));
-
-            const pcChunks = [];
-            for (let i = 0; i < summary.plano_contas.length; i += 200) {
-              pcChunks.push(summary.plano_contas.slice(i, i + 200));
-            }
-            for (const chunk of pcChunks) {
-              await db.insert(financeiro_plano_contas).values(
-                chunk.map((p) => ({
-                  upload_id: upload.id,
-                  ano: summary.ano_referencia,
-                  codigo: p.codigo,
-                  descricao: p.descricao,
-                  tipo: p.tipo,
-                  orcado: String(p.orcado),
-                  realizado: String(p.realizado),
-                  diferenca: String(p.diferenca),
-                }))
-              );
-            }
-          }
-
-          await db
-            .update(uploads)
-            .set({
-              status: "sucesso",
-              registros_importados: rows.length + summary.evolucao_mensal.length,
-            })
-            .where(eq(uploads.id, upload.id));
+          await sql`
+            update uploads
+            set status = 'sucesso', registros_importados = ${rows.length + summary.evolucao_mensal.length}
+            where id = ${upload.id}
+          `;
         } catch (dbErr) {
           console.error("DB error:", dbErr);
         }
