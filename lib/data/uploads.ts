@@ -1,4 +1,3 @@
-import { desc } from "drizzle-orm";
 import {
   buildSyntheticProcessingLogs,
   getModuleGovernance,
@@ -65,47 +64,22 @@ function isMissingGovernanceColumnError(error: unknown): boolean {
 }
 
 async function selectGovernedUploads(): Promise<UploadReadModel[]> {
-  const { db, uploads: uploadsRaw } = await import("@/lib/db");
-  const uploads = uploadsRaw as any;
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(process.env.DATABASE_URL!);
 
-  try {
-    return await db
-      .select({
-        id: uploads.id,
-        nomeArquivo: uploads.nome_arquivo,
-        modulo: uploads.modulo,
-        tipoDocumento: uploads.tipo_documento,
-        parser: uploads.parser,
-        parserVersion: uploads.parser_version,
-        usuarioImportacao: uploads.usuario_importacao,
-        status: uploads.status,
-        dataUpload: uploads.created_at,
-        dataImportacao: uploads.data_importacao,
-        registrosProcessados: uploads.registros_importados,
-        quantidadeRegistros: uploads.quantidade_registros,
-        quantidadeErros: uploads.quantidade_erros,
-        erroMensagem: uploads.erro_mensagem,
-      })
-      .from(uploads)
-      .orderBy(desc(uploads.created_at))
-      .limit(100);
-  } catch (error) {
-    if (!isMissingGovernanceColumnError(error)) throw error;
-
-    return db
-      .select({
-        id: uploads.id,
-        nomeArquivo: uploads.nome_arquivo,
-        modulo: uploads.modulo,
-        status: uploads.status,
-        dataUpload: uploads.created_at,
-        registrosProcessados: uploads.registros_importados,
-        erroMensagem: uploads.erro_mensagem,
-      })
-      .from(uploads)
-      .orderBy(desc(uploads.created_at))
-      .limit(100);
-  }
+  return await sql`
+    select
+      id,
+      nome_arquivo as "nomeArquivo",
+      modulo,
+      status,
+      created_at as "dataUpload",
+      registros_importados as "registrosProcessados",
+      erro_mensagem as "erroMensagem"
+    from uploads
+    order by id desc
+    limit 100
+  ` as UploadReadModel[];
 }
 
 export async function listUploadsReadOnly(): Promise<UploadImportacao[]> {
