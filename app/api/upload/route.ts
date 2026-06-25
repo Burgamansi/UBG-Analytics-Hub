@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       registros: number;
       erros: string[];
       preview?: unknown[];
+      persistencia?: { saved: boolean; uploadId?: number; error?: string };
     };
 
     if (modulo === "comercial") {
@@ -232,7 +233,10 @@ export async function POST(request: NextRequest) {
         preview: [summary],
       };
 
-      if (process.env.DATABASE_URL) {
+      if (!process.env.DATABASE_URL) {
+        result.persistencia = { saved: false, error: "DATABASE_URL nao configurada." };
+        result.erros.push("Arquivo processado, mas DATABASE_URL nao esta configurada para persistencia.");
+      } else {
         try {
           const { neon } = await import("@neondatabase/serverless");
           const sql = neon(process.env.DATABASE_URL);
@@ -334,8 +338,20 @@ export async function POST(request: NextRequest) {
             set status = 'sucesso', registros_importados = ${rows.length + summary.evolucao_mensal.length}
             where id = ${upload.id}
           `;
+
+          result.persistencia = { saved: true, uploadId: upload.id };
+          console.log("[financeiro] Persistencia concluida", { uploadId: upload.id, registros: rows.length });
         } catch (dbErr) {
+          const message = dbErr instanceof Error ? dbErr.message : String(dbErr);
           console.error("DB error:", dbErr);
+          result.persistencia = { saved: false, error: message };
+          result.erros.push("Arquivo processado, mas nao foi possivel persistir os dados financeiros no banco.");
+          return NextResponse.json({
+            success: false,
+            arquivo: file.name,
+            tamanho_kb: Math.round(file.size / 1024),
+            ...result,
+          }, { status: 500 });
         }
       }
     } else if (modulo === "compras") {
