@@ -6,6 +6,19 @@ import { parseFinanceiroXLS } from "@/lib/parsers/parse-financeiro";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+function isMissingGovernanceColumnError(error: unknown): boolean {
+  const message = String(error).toLowerCase();
+  return [
+    "tipo_documento",
+    "parser",
+    "parser_version",
+    "usuario_importacao",
+    "quantidade_registros",
+    "quantidade_erros",
+    "data_importacao",
+  ].some((column) => message.includes(column));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -244,15 +257,29 @@ export async function POST(request: NextRequest) {
 
           const { eq } = await import("drizzle-orm");
 
-          const [upload] = (await db
-            .insert(uploads)
-            .values({
-              nome_arquivo: file.name,
-              modulo: "financeiro",
-              status: "processando",
-              ano_referencia: summary.ano_referencia,
-            })
-            .returning()) as any;
+          let upload: any;
+          try {
+            [upload] = (await db
+              .insert(uploads)
+              .values({
+                nome_arquivo: file.name,
+                modulo: "financeiro",
+                status: "processando",
+                ano_referencia: summary.ano_referencia,
+              })
+              .returning()) as any;
+          } catch (insertErr) {
+            if (!isMissingGovernanceColumnError(insertErr)) throw insertErr;
+
+            const { neon } = await import("@neondatabase/serverless");
+            const sql = neon(process.env.DATABASE_URL);
+            const legacyUploads = await sql`
+              insert into uploads (nome_arquivo, modulo, status, ano_referencia)
+              values (${file.name}, 'financeiro', 'processando', ${summary.ano_referencia})
+              returning id, nome_arquivo, modulo, status, ano_referencia, created_at
+            `;
+            upload = legacyUploads[0];
+          }
 
           // Salvar registros legados (compatibilidade)
           if (rows.length > 0) {
@@ -397,3 +424,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
